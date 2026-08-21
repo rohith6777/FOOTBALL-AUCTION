@@ -218,10 +218,6 @@ io.on("connection", socket => {
 
     room.current.bid = nextBid;
     room.current.bidder = socket.data.slot;
-
-// Reset timer whenever someone places a successful bid
-    room.timeLeft = 10;
-
     emitState(room);
   });
 
