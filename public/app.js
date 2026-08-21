@@ -1,186 +1,228 @@
 const socket = io();
 
-const $ = (id) => document.getElementById(id);
+const $ = id => document.getElementById(id);
 
 let mySlot = null;
 let latest = null;
 
 
-// ===============================
-// TOAST MESSAGE
-// ===============================
+// =====================================================
+// TOAST
+// =====================================================
 
 function toast(message) {
 
     $("toast").textContent = message;
+
     $("toast").style.display = "block";
 
     clearTimeout(window.toastTimer);
 
     window.toastTimer = setTimeout(() => {
+
         $("toast").style.display = "none";
+
     }, 2200);
+
 }
 
 
-// ===============================
+// =====================================================
 // SHOW / HIDE
-// ===============================
+// =====================================================
 
 function show(id, visible = true) {
 
-    $(id).classList.toggle("hidden", !visible);
+    $(id).classList.toggle(
+        "hidden",
+        !visible
+    );
 
 }
 
 
-// ===============================
+// =====================================================
 // RETURN TO LOBBY
-// ===============================
+// =====================================================
 
 function lobby() {
 
     mySlot = null;
+
     latest = null;
 
-    $("roomPill").textContent = "OFFLINE";
+    $("roomPill").textContent =
+        "OFFLINE";
 
     show("lobby", true);
     show("waiting", false);
     show("auction", false);
     show("resultsCard", false);
+
 }
 
 
-// ===============================
+// =====================================================
 // CREATE ROOM
-// ===============================
+// =====================================================
 
 $("createBtn").onclick = () => {
 
     const name =
-        $("name").value.trim() || "Player 1";
+        $("name").value.trim() ||
+        "Player 1";
 
     const purse =
         $("purse").value;
 
-    socket.emit("createRoom", {
-        name,
-        purse
-    });
+    socket.emit(
+        "createRoom",
+        {
+            name,
+            purse
+        }
+    );
 
 };
 
 
-// ===============================
+// =====================================================
 // JOIN ROOM
-// ===============================
+// =====================================================
 
 $("joinBtn").onclick = () => {
 
     const code =
-        $("roomCode").value.trim().toUpperCase();
+        $("roomCode")
+            .value
+            .trim()
+            .toUpperCase();
 
     const name =
-        $("joinName").value.trim() || "Player 2";
+        $("joinName")
+            .value
+            .trim() ||
+        "Player 2";
 
-    socket.emit("joinRoom", {
-        code,
-        name
-    });
+    socket.emit(
+        "joinRoom",
+        {
+            code,
+            name
+        }
+    );
 
 };
 
 
-// ===============================
-// START AUCTION
-// ===============================
+// =====================================================
+// START
+// =====================================================
 
 $("startBtn").onclick = () => {
 
-    socket.emit("startAuction");
+    socket.emit(
+        "startAuction"
+    );
 
 };
 
 
-// ===============================
+// =====================================================
 // BID
-// ===============================
+// =====================================================
 
 $("bidBtn").onclick = () => {
 
-    socket.emit("bid");
+    socket.emit(
+        "bid"
+    );
 
 };
 
 
-// ===============================
-// SELL
-// ===============================
+// =====================================================
+// SOLD
+// =====================================================
 
 $("sellBtn").onclick = () => {
 
-    socket.emit("sell");
+    socket.emit(
+        "sell"
+    );
 
 };
 
 
-// ===============================
+// =====================================================
 // SKIP
-// ===============================
+// =====================================================
 
 $("skipBtn").onclick = () => {
 
-    socket.emit("skip");
+    socket.emit(
+        "skip"
+    );
 
 };
 
 
-// ===============================
+// =====================================================
 // PAUSE / RESUME
-// ===============================
+// =====================================================
 
 $("pauseBtn").onclick = () => {
 
-    socket.emit("togglePause");
+    socket.emit(
+        "togglePause"
+    );
 
 };
 
 
-// ===============================
-// LEAVE ROOM
-// ===============================
+// =====================================================
+// LEAVE
+// =====================================================
 
 $("leaveBtn").onclick = () => {
 
-    const confirmed =
-        confirm("Are you sure you want to leave the room?");
+    if (
+        !confirm(
+            "Are you sure you want to leave the room?"
+        )
+    ) {
 
-    if (!confirmed) {
         return;
+
     }
 
-    socket.emit("leaveRoom");
+
+    socket.emit(
+        "leaveRoom"
+    );
+
 
     lobby();
 
 };
 
 
-// ===============================
+// =====================================================
 // PLAY AGAIN
-// ===============================
+// =====================================================
 
 $("againBtn").onclick = () => {
 
-    socket.emit("playAgain");
+    socket.emit(
+        "playAgain"
+    );
 
 };
 
 
-// ===============================
+// =====================================================
 // COPY ROOM CODE
-// ===============================
+// =====================================================
 
 $("copyBtn").onclick = async () => {
 
@@ -190,276 +232,375 @@ $("copyBtn").onclick = async () => {
             $("codeDisplay").textContent
         );
 
-        toast("Room code copied!");
+        toast(
+            "Room code copied!"
+        );
 
-    } catch {
+    }
 
-        toast("Copy failed. Copy it manually.");
+    catch {
+
+        toast(
+            "Copy failed. Copy it manually."
+        );
 
     }
 
 };
 
 
-// ===============================
-// SOCKET CONNECT
-// ===============================
+// =====================================================
+// CONNECTED
+// =====================================================
 
-socket.on("connect", () => {
+socket.on(
+    "connect",
+    () => {
 
-    $("roomPill").textContent = "ONLINE";
+        $("roomPill").textContent =
+            "ONLINE";
 
-});
-
-
-// ===============================
-// SOCKET DISCONNECT
-// ===============================
-
-socket.on("disconnect", () => {
-
-    $("roomPill").textContent = "OFFLINE";
-
-});
+    }
+);
 
 
-// ===============================
+// =====================================================
+// DISCONNECTED
+// =====================================================
+
+socket.on(
+    "disconnect",
+    () => {
+
+        $("roomPill").textContent =
+            "OFFLINE";
+
+    }
+);
+
+
+// =====================================================
 // ROOM CREATED
-// ===============================
+// =====================================================
 
-socket.on("roomCreated", (code) => {
+socket.on(
+    "roomCreated",
+    code => {
 
-    mySlot = 0;
+        mySlot = 0;
 
-    $("codeDisplay").textContent = code;
+        $("codeDisplay").textContent =
+            code;
 
-    $("roomPill").textContent =
-        "ROOM " + code;
+        $("roomPill").textContent =
+            "ROOM " + code;
 
-    show("lobby", false);
-    show("waiting", true);
+        show("lobby", false);
 
-});
+        show("waiting", true);
+
+    }
+);
 
 
-// ===============================
+// =====================================================
 // ROOM JOINED
-// ===============================
+// =====================================================
 
-socket.on("joined", (code) => {
+socket.on(
+    "joined",
+    code => {
 
-    mySlot = 1;
+        mySlot = 1;
 
-    $("codeDisplay").textContent = code;
+        $("codeDisplay").textContent =
+            code;
 
-    $("roomPill").textContent =
-        "ROOM " + code;
+        $("roomPill").textContent =
+            "ROOM " + code;
 
-    show("lobby", false);
-    show("waiting", true);
+        show("lobby", false);
 
-});
-
-
-// ===============================
-// ERROR MESSAGE
-// ===============================
-
-socket.on("errorMsg", (message) => {
-
-    toast(message);
-
-    if (
-        message.includes("left the room") ||
-        message.includes("disconnected")
-    ) {
-
-        lobby();
+        show("waiting", true);
 
     }
-
-});
-
-
-// ===============================
-// TIMER TICK
-// ===============================
-
-socket.on("tick", (time) => {
-
-    if (!latest?.paused) {
-
-        $("timer").textContent = time;
-
-    }
-
-});
+);
 
 
-// ===============================
-// MAIN GAME STATE
-// ===============================
+// =====================================================
+// SERVER ERROR
+// =====================================================
 
-socket.on("state", (state) => {
+socket.on(
+    "errorMsg",
+    message => {
 
-    latest = state;
+        toast(message);
 
+        if (
+            message.includes(
+                "room is closed"
+            )
+        ) {
 
-    // -------------------------------
-    // WAITING ROOM
-    // -------------------------------
+            lobby();
 
-    if (
-        state.players.every(Boolean) &&
-        !state.started &&
-        !state.finished
-    ) {
-
-        $("waitingText").textContent =
-            "Both players are ready. Host can start the auction.";
-
-        show(
-            "startBtn",
-            mySlot === 0
-        );
+        }
 
     }
-
-    else if (!state.players[1]) {
-
-        $("waitingText").textContent =
-            "Waiting for your friend to join...";
-
-        show("startBtn", false);
-
-    }
+);
 
 
-    renderWaiting(state);
+// =====================================================
+// LIVE TIMER
+// =====================================================
 
+socket.on(
+    "tick",
+    time => {
 
-    // -------------------------------
-    // AUCTION SCREEN
-    // -------------------------------
+        if (
+            latest &&
+            latest.paused
+        ) {
 
-    if (
-        state.started ||
-        state.finished
-    ) {
+            $("timer").textContent =
+                "PAUSED";
 
-        show("waiting", false);
-        show("auction", true);
+            return;
 
-        $("auctionRoom").textContent =
-            "ROOM " + state.code;
+        }
 
-        $("progress").textContent =
-            state.finished
-                ? `Auction Complete • ${state.total} players`
-                : `Player ${Math.min(
-                    state.index,
-                    state.total
-                )} / ${state.total}`;
-
-    }
-
-
-    // -------------------------------
-    // TEAMS
-    // -------------------------------
-
-    renderTeams(state);
-
-
-    // -------------------------------
-    // CURRENT PLAYER
-    // -------------------------------
-
-    if (state.current) {
-
-        $("currentPlayer").textContent =
-            state.current.name;
-
-        $("currentBid").textContent =
-            state.current.bid + " Cr";
-
-        $("highestBidder").textContent =
-            state.current.bidder === null
-                ? "No bid"
-                : state.players[
-                    state.current.bidder
-                  ]?.name || "Unknown";
-
-
-        // IMPORTANT:
-        // The timer comes from the server.
-        // Every new bid resets it to 10.
 
         $("timer").textContent =
-            state.paused
-                ? "PAUSED"
-                : state.current.timeLeft;
-
-
-        const highestBid =
-            state.current.bidder === mySlot;
-
-
-        $("bidBtn").disabled =
-            state.paused || highestBid;
-
-
-        $("bidBtn").textContent =
-            highestBid
-                ? "HIGHEST BID"
-                : "BID +1 Cr";
-
-
-        $("sellBtn").disabled =
-            state.paused ||
-            state.current.bidder === null;
-
-
-        $("skipBtn").disabled =
-            state.paused;
-
-
-        $("pauseBtn").textContent =
-            state.paused
-                ? "▶ RESUME"
-                : "⏸ PAUSE";
-
-
-        $("pauseBtn").disabled =
-            mySlot !== 0;
+            time;
 
     }
+);
 
 
-    // -------------------------------
-    // FINAL RESULTS
-    // -------------------------------
+// =====================================================
+// MAIN STATE
+// =====================================================
 
-    if (state.finished) {
+socket.on(
+    "state",
+    state => {
 
-        renderFinal(state);
+        latest = state;
+
+
+        // ---------------------------------------------
+        // WAITING ROOM
+        // ---------------------------------------------
+
+        if (
+            state.players.every(Boolean) &&
+            !state.started &&
+            !state.finished
+        ) {
+
+            $("waitingText").textContent =
+                "Both players are ready. Host can start the auction.";
+
+            show(
+                "startBtn",
+                mySlot === 0
+            );
+
+        }
+
+        else if (
+            !state.players[1]
+        ) {
+
+            $("waitingText").textContent =
+                "Waiting for your friend to join...";
+
+            show(
+                "startBtn",
+                false
+            );
+
+        }
+
+
+        renderWaiting(state);
+
+
+        // ---------------------------------------------
+        // AUCTION
+        // ---------------------------------------------
+
+        if (
+            state.started ||
+            state.finished
+        ) {
+
+            show(
+                "waiting",
+                false
+            );
+
+            show(
+                "auction",
+                true
+            );
+
+
+            $("auctionRoom").textContent =
+                "ROOM " + state.code;
+
+
+            $("progress").textContent =
+                state.finished
+
+                    ? `Auction Complete • ${state.total} players`
+
+                    : `Player ${
+                        Math.min(
+                            state.index,
+                            state.total
+                        )
+                    } / ${state.total}`;
+
+        }
+
+
+        // ---------------------------------------------
+        // TEAMS
+        // ---------------------------------------------
+
+        renderTeams(state);
+
+
+        // ---------------------------------------------
+        // CURRENT PLAYER
+        // ---------------------------------------------
+
+        if (
+            state.current
+        ) {
+
+            $("currentPlayer").textContent =
+                state.current.name;
+
+
+            $("currentBid").textContent =
+                state.current.bid +
+                " Cr";
+
+
+            $("highestBidder").textContent =
+
+                state.current.bidder === null
+
+                    ? "No bid"
+
+                    : state.players[
+                        state.current.bidder
+                    ]?.name || "Unknown";
+
+
+            // -----------------------------------------
+            // AUTHORITATIVE SERVER TIMER
+            // -----------------------------------------
+
+            $("timer").textContent =
+
+                state.paused
+
+                    ? "PAUSED"
+
+                    : state.current.timeLeft;
+
+
+            // -----------------------------------------
+            // BID BUTTON
+            // -----------------------------------------
+
+            const alreadyHighest =
+                state.current.bidder === mySlot;
+
+
+            $("bidBtn").disabled =
+                state.paused ||
+                alreadyHighest;
+
+
+            $("bidBtn").textContent =
+
+                alreadyHighest
+
+                    ? "HIGHEST BID"
+
+                    : "BID +1 Cr";
+
+
+            // -----------------------------------------
+            // SOLD
+            // -----------------------------------------
+
+            $("sellBtn").disabled =
+
+                state.paused ||
+                state.current.bidder === null;
+
+
+            // -----------------------------------------
+            // SKIP
+            // -----------------------------------------
+
+            $("skipBtn").disabled =
+                state.paused;
+
+
+            // -----------------------------------------
+            // PAUSE BUTTON
+            // -----------------------------------------
+
+            $("pauseBtn").disabled =
+                mySlot !== 0;
+
+
+            $("pauseBtn").textContent =
+
+                state.paused
+
+                    ? "▶ RESUME"
+
+                    : "⏸ PAUSE";
+
+        }
+
+
+        // ---------------------------------------------
+        // FINAL
+        // ---------------------------------------------
+
+        if (
+            state.finished
+        ) {
+
+            renderFinal(state);
+
+        }
 
     }
+);
 
-});
 
-
-// ===============================
-// WAITING ROOM PLAYERS
-// ===============================
+// =====================================================
+// WAITING PLAYERS
+// =====================================================
 
 function renderWaiting(state) {
 
     $("playersWait").innerHTML =
         state.players
-            .map((player, index) => {
+            .map(
+                (player, index) => `
 
-                return `
                     <div class="wait-player">
 
                         <div class="eyebrow">
@@ -469,7 +610,7 @@ function renderWaiting(state) {
                         <strong>
                             ${
                                 player
-                                    ? escapeHTML(player.name)
+                                    ? escapeHtml(player.name)
                                     : "Waiting..."
                             }
                         </strong>
@@ -483,26 +624,26 @@ function renderWaiting(state) {
                         </div>
 
                     </div>
-                `;
 
-            })
+                `
+            )
             .join("");
 
 }
 
 
-// ===============================
-// TEAM DISPLAY
-// ===============================
+// =====================================================
+// TEAMS
+// =====================================================
 
 function renderTeams(state) {
 
     $("teams").innerHTML =
         state.players
             .filter(Boolean)
-            .map((player, index) => {
+            .map(
+                (player, index) => `
 
-                return `
                     <div class="team ${
                         index === mySlot
                             ? "you"
@@ -513,7 +654,9 @@ function renderTeams(state) {
 
                             <div class="team-name">
 
-                                ${escapeHTML(player.name)}
+                                ${escapeHtml(
+                                    player.name
+                                )}
 
                                 ${
                                     index === mySlot
@@ -538,19 +681,19 @@ function renderTeams(state) {
                                 player.squad.length
 
                                     ? player.squad
-                                        .map(playerData => {
+                                        .map(
+                                            item => `
 
-                                            return `
-                                                ${escapeHTML(
-                                                    playerData.name
+                                                ${escapeHtml(
+                                                    item.name
                                                 )}
 
                                                 <span class="price">
-                                                    ${playerData.price}Cr
+                                                    ${item.price}Cr
                                                 </span>
-                                            `;
 
-                                        })
+                                            `
+                                        )
                                         .join(" · ")
 
                                     : "No players bought yet"
@@ -559,28 +702,27 @@ function renderTeams(state) {
                         </div>
 
                     </div>
-                `;
 
-            })
+                `
+            )
             .join("");
 
 
-    // Number of bought players
-
-    const totalBought =
+    const totalSquad =
         state.players.reduce(
             (total, player) =>
                 total +
-                (player?.squad.length || 0),
+                (
+                    player?.squad.length ||
+                    0
+                ),
             0
         );
 
 
     $("squadCount").textContent =
-        totalBought + " bought";
+        totalSquad + " bought";
 
-
-    // Detailed squads
 
     $("squads").innerHTML = `
 
@@ -589,16 +731,15 @@ function renderTeams(state) {
             ${
                 state.players
                     .filter(Boolean)
-                    .map(player => {
-
-                        return `
+                    .map(
+                        player => `
 
                             <div class="team">
 
                                 <div class="team-head">
 
                                     <strong>
-                                        ${escapeHTML(
+                                        ${escapeHtml(
                                             player.name
                                         )}
                                     </strong>
@@ -613,28 +754,26 @@ function renderTeams(state) {
 
                                 ${
                                     player.squad
-                                        .map(playerData => {
-
-                                            return `
+                                        .map(
+                                            item => `
 
                                                 <div class="player-row">
 
                                                     <span>
-                                                        ${escapeHTML(
-                                                            playerData.name
+                                                        ${escapeHtml(
+                                                            item.name
                                                         )}
                                                     </span>
 
                                                     <span class="price">
-                                                        ${playerData.price}
+                                                        ${item.price}
                                                         Cr
                                                     </span>
 
                                                 </div>
 
-                                            `;
-
-                                        })
+                                            `
+                                        )
                                         .join("")
 
                                     ||
@@ -648,9 +787,8 @@ function renderTeams(state) {
 
                             </div>
 
-                        `;
-
-                    })
+                        `
+                    )
                     .join("")
             }
 
@@ -661,79 +799,66 @@ function renderTeams(state) {
 }
 
 
-// ===============================
+// =====================================================
 // FINAL RESULT
-// ===============================
+// =====================================================
 
 function renderFinal(state) {
 
-    show("resultsCard", true);
+    show(
+        "resultsCard",
+        true
+    );
 
 
-    const player1 =
-        state.players[0];
-
-    const player2 =
-        state.players[1];
+    const [a, b] =
+        state.players;
 
 
-    if (!player1 || !player2) {
+    if (!a || !b) {
 
         return;
 
     }
 
 
-    // Calculate total spending
+    const spending =
+        player =>
+            player.squad.reduce(
+                (sum, item) =>
+                    sum + item.price,
+                0
+            );
 
-    function spending(player) {
-
-        return player.squad.reduce(
-            (total, playerData) =>
-                total + playerData.price,
-            0
-        );
-
-    }
-
-
-    /*
-        Main winner rule:
-
-        1. Most players bought wins.
-
-        2. If both have the same number,
-           the player who spent more wins.
-    */
 
     let winner;
 
 
     if (
-        player1.squad.length >
-        player2.squad.length
+        a.squad.length >
+        b.squad.length
     ) {
 
-        winner = player1;
+        winner = a;
 
     }
 
     else if (
-        player2.squad.length >
-        player1.squad.length
+        b.squad.length >
+        a.squad.length
     ) {
 
-        winner = player2;
+        winner = b;
 
     }
 
     else {
 
         winner =
-            spending(player1) >=
-            spending(player2)
-                ? player1
-                : player2;
+            spending(a) >=
+            spending(b)
+                ? a
+                : b;
 
     }
 
@@ -751,7 +876,9 @@ function renderFinal(state) {
             </div>
 
             <div class="winner-name">
-                ${escapeHTML(winner.name)}
+                ${escapeHtml(
+                    winner.name
+                )}
             </div>
 
             <div class="hint">
@@ -770,14 +897,13 @@ function renderFinal(state) {
 
             ${
                 state.players
-                    .map(player => {
-
-                        return `
+                    .map(
+                        player => `
 
                             <div class="stat">
 
                                 <strong>
-                                    ${escapeHTML(
+                                    ${escapeHtml(
                                         player.name
                                     )}
                                 </strong>
@@ -804,9 +930,8 @@ function renderFinal(state) {
 
                             </div>
 
-                        `;
-
-                    })
+                        `
+                    )
                     .join("")
             }
 
@@ -817,27 +942,23 @@ function renderFinal(state) {
 }
 
 
-// ===============================
-// HTML SAFETY
-// ===============================
+// =====================================================
+// HTML ESCAPE
+// =====================================================
 
-function escapeHTML(value) {
+function escapeHtml(value) {
 
     return String(value).replace(
         /[&<>"']/g,
-        character => {
+        character => ({
 
-            return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
 
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#039;"
-
-            }[character];
-
-        }
+        }[character])
     );
 
 }
