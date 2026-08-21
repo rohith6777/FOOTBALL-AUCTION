@@ -4,6 +4,40 @@ const $ = id => document.getElementById(id);
 
 let mySlot = null;
 let latest = null;
+let selectedBidAmount = 100;
+
+
+// =====================================================
+// SAFE HELPERS
+// =====================================================
+
+function el(id) {
+    return document.getElementById(id);
+}
+
+function setText(id, value) {
+    const element = el(id);
+
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+function setHTML(id, value) {
+    const element = el(id);
+
+    if (element) {
+        element.innerHTML = value;
+    }
+}
+
+function setDisplay(id, visible) {
+    const element = el(id);
+
+    if (element) {
+        element.classList.toggle("hidden", !visible);
+    }
+}
 
 
 // =====================================================
@@ -12,15 +46,21 @@ let latest = null;
 
 function toast(message) {
 
-    $("toast").textContent = message;
+    const toastElement = el("toast");
 
-    $("toast").style.display = "block";
+    if (!toastElement) {
+        alert(message);
+        return;
+    }
+
+    toastElement.textContent = message;
+    toastElement.style.display = "block";
 
     clearTimeout(window.toastTimer);
 
     window.toastTimer = setTimeout(() => {
 
-        $("toast").style.display = "none";
+        toastElement.style.display = "none";
 
     }, 2200);
 
@@ -33,7 +73,13 @@ function toast(message) {
 
 function show(id, visible = true) {
 
-    $(id).classList.toggle(
+    const element = el(id);
+
+    if (!element) {
+        return;
+    }
+
+    element.classList.toggle(
         "hidden",
         !visible
     );
@@ -48,11 +94,12 @@ function show(id, visible = true) {
 function lobby() {
 
     mySlot = null;
-
     latest = null;
 
-    $("roomPill").textContent =
-        "OFFLINE";
+    setText(
+        "roomPill",
+        "OFFLINE"
+    );
 
     show("lobby", true);
     show("waiting", false);
@@ -66,187 +113,245 @@ function lobby() {
 // CREATE ROOM
 // =====================================================
 
-$("createBtn").onclick = () => {
+const createBtn = el("createBtn");
 
-    const name =
-        $("name").value.trim() ||
-        "Player 1";
+if (createBtn) {
 
-    const purse =
-        $("purse").value;
+    createBtn.onclick = () => {
 
-    socket.emit(
-        "createRoom",
-        {
-            name,
-            purse
-        }
-    );
+        const name =
+            el("name")?.value.trim() ||
+            "Player 1";
 
-};
+        const purse =
+            el("purse")?.value;
+
+        socket.emit(
+            "createRoom",
+            {
+                name,
+                purse
+            }
+        );
+
+    };
+
+}
 
 
 // =====================================================
 // JOIN ROOM
 // =====================================================
 
-$("joinBtn").onclick = () => {
+const joinBtn = el("joinBtn");
 
-    const code =
-        $("roomCode")
-            .value
-            .trim()
-            .toUpperCase();
+if (joinBtn) {
 
-    const name =
-        $("joinName")
-            .value
-            .trim() ||
-        "Player 2";
+    joinBtn.onclick = () => {
 
-    socket.emit(
-        "joinRoom",
-        {
-            code,
-            name
-        }
-    );
+        const code =
+            el("roomCode")
+                ?.value
+                .trim()
+                .toUpperCase();
 
-};
+        const name =
+            el("joinName")
+                ?.value
+                .trim() ||
+            "Player 2";
+
+        socket.emit(
+            "joinRoom",
+            {
+                code,
+                name
+            }
+        );
+
+    };
+
+}
 
 
 // =====================================================
 // START
 // =====================================================
 
-$("startBtn").onclick = () => {
+const startBtn = el("startBtn");
 
-    socket.emit(
-        "startAuction"
-    );
+if (startBtn) {
 
-};
+    startBtn.onclick = () => {
+
+        socket.emit(
+            "startAuction"
+        );
+
+    };
+
+}
 
 
 // =====================================================
-// BID
+// BID BUTTON
 // =====================================================
 
-$("bidBtn").onclick = () => {
+const bidBtn = el("bidBtn");
 
-    socket.emit(
-        "bid"
-    );
+if (bidBtn) {
 
-};
+    bidBtn.onclick = () => {
+
+        socket.emit(
+            "bid",
+            {
+                amount: selectedBidAmount
+            }
+        );
+
+    };
+
+}
 
 
 // =====================================================
 // SOLD
 // =====================================================
 
-$("sellBtn").onclick = () => {
+const sellBtn = el("sellBtn");
 
-    socket.emit(
-        "sell"
-    );
+if (sellBtn) {
 
-};
+    sellBtn.onclick = () => {
+
+        socket.emit(
+            "sell"
+        );
+
+    };
+
+}
 
 
 // =====================================================
 // SKIP
 // =====================================================
 
-$("skipBtn").onclick = () => {
+const skipBtn = el("skipBtn");
 
-    socket.emit(
-        "skip"
-    );
+if (skipBtn) {
 
-};
+    skipBtn.onclick = () => {
+
+        socket.emit(
+            "skip"
+        );
+
+    };
+
+}
 
 
 // =====================================================
 // PAUSE / RESUME
 // =====================================================
 
-$("pauseBtn").onclick = () => {
+const pauseBtn = el("pauseBtn");
 
-    socket.emit(
-        "togglePause"
-    );
+if (pauseBtn) {
 
-};
+    pauseBtn.onclick = () => {
+
+        socket.emit(
+            "togglePause"
+        );
+
+    };
+
+}
 
 
 // =====================================================
 // LEAVE
 // =====================================================
 
-$("leaveBtn").onclick = () => {
+const leaveBtn = el("leaveBtn");
 
-    if (
-        !confirm(
-            "Are you sure you want to leave the room?"
-        )
-    ) {
+if (leaveBtn) {
 
-        return;
+    leaveBtn.onclick = () => {
 
-    }
+        if (
+            !confirm(
+                "Are you sure you want to leave the room?"
+            )
+        ) {
+            return;
+        }
 
+        socket.emit(
+            "leaveRoom"
+        );
 
-    socket.emit(
-        "leaveRoom"
-    );
+        lobby();
 
+    };
 
-    lobby();
-
-};
+}
 
 
 // =====================================================
 // PLAY AGAIN
 // =====================================================
 
-$("againBtn").onclick = () => {
+const againBtn = el("againBtn");
 
-    socket.emit(
-        "playAgain"
-    );
+if (againBtn) {
 
-};
+    againBtn.onclick = () => {
+
+        socket.emit(
+            "playAgain"
+        );
+
+    };
+
+}
 
 
 // =====================================================
 // COPY ROOM CODE
 // =====================================================
 
-$("copyBtn").onclick = async () => {
+const copyBtn = el("copyBtn");
 
-    try {
+if (copyBtn) {
 
-        await navigator.clipboard.writeText(
-            $("codeDisplay").textContent
-        );
+    copyBtn.onclick = async () => {
 
-        toast(
-            "Room code copied!"
-        );
+        try {
 
-    }
+            await navigator.clipboard.writeText(
+                el("codeDisplay")?.textContent || ""
+            );
 
-    catch {
+            toast(
+                "Room code copied!"
+            );
 
-        toast(
-            "Copy failed. Copy it manually."
-        );
+        }
+        catch {
 
-    }
+            toast(
+                "Copy failed. Copy it manually."
+            );
 
-};
+        }
+
+    };
+
+}
 
 
 // =====================================================
@@ -257,8 +362,10 @@ socket.on(
     "connect",
     () => {
 
-        $("roomPill").textContent =
-            "ONLINE";
+        setText(
+            "roomPill",
+            "ONLINE"
+        );
 
     }
 );
@@ -272,8 +379,10 @@ socket.on(
     "disconnect",
     () => {
 
-        $("roomPill").textContent =
-            "OFFLINE";
+        setText(
+            "roomPill",
+            "OFFLINE"
+        );
 
     }
 );
@@ -289,15 +398,25 @@ socket.on(
 
         mySlot = 0;
 
-        $("codeDisplay").textContent =
-            code;
+        setText(
+            "codeDisplay",
+            code
+        );
 
-        $("roomPill").textContent =
-            "ROOM " + code;
+        setText(
+            "roomPill",
+            "ROOM " + code
+        );
 
-        show("lobby", false);
+        show(
+            "lobby",
+            false
+        );
 
-        show("waiting", true);
+        show(
+            "waiting",
+            true
+        );
 
     }
 );
@@ -311,17 +430,30 @@ socket.on(
     "joined",
     code => {
 
-        mySlot = 1;
+        /*
+         * Server assigns the actual slot.
+         * We don't force slot = 1 here.
+         */
 
-        $("codeDisplay").textContent =
-            code;
+        setText(
+            "codeDisplay",
+            code
+        );
 
-        $("roomPill").textContent =
-            "ROOM " + code;
+        setText(
+            "roomPill",
+            "ROOM " + code
+        );
 
-        show("lobby", false);
+        show(
+            "lobby",
+            false
+        );
 
-        show("waiting", true);
+        show(
+            "waiting",
+            true
+        );
 
     }
 );
@@ -338,14 +470,52 @@ socket.on(
         toast(message);
 
         if (
-            message.includes(
-                "room is closed"
-            )
+            String(message)
+                .toLowerCase()
+                .includes("room closed")
         ) {
 
             lobby();
 
         }
+
+    }
+);
+
+
+// =====================================================
+// ROOM CLOSED
+// =====================================================
+
+socket.on(
+    "roomClosed",
+    () => {
+
+        toast(
+            "Room closed."
+        );
+
+        lobby();
+
+    }
+);
+
+
+// =====================================================
+// DISCONNECTED PLAYER
+// =====================================================
+
+socket.on(
+    "playerDisconnected",
+    data => {
+
+        if (!data) {
+            return;
+        }
+
+        toast(
+            `${data.name || "A player"} disconnected.`
+        );
 
     }
 );
@@ -364,16 +534,19 @@ socket.on(
             latest.paused
         ) {
 
-            $("timer").textContent =
-                "PAUSED";
+            setText(
+                "timer",
+                "PAUSED"
+            );
 
             return;
 
         }
 
-
-        $("timer").textContent =
-            time;
+        setText(
+            "timer",
+            time
+        );
 
     }
 );
@@ -389,43 +562,89 @@ socket.on(
 
         latest = state;
 
+        /*
+         * Find our real slot from the server state.
+         */
+
+        if (
+            state.players
+        ) {
+
+            const found =
+                state.players.findIndex(
+                    player =>
+                        player &&
+                        player.id === socket.id
+                );
+
+            if (found !== -1) {
+
+                mySlot = found;
+
+            }
+
+        }
+
 
         // ---------------------------------------------
         // WAITING ROOM
         // ---------------------------------------------
 
+        renderWaiting(
+            state
+        );
+
+
         if (
-            state.players.every(Boolean) &&
             !state.started &&
             !state.finished
         ) {
 
-            $("waitingText").textContent =
-                "Both players are ready. Host can start the auction.";
-
             show(
-                "startBtn",
-                mySlot === 0
+                "waiting",
+                true
             );
 
-        }
-
-        else if (
-            !state.players[1]
-        ) {
-
-            $("waitingText").textContent =
-                "Waiting for your friend to join...";
-
             show(
-                "startBtn",
+                "auction",
                 false
             );
 
+            const activePlayers =
+                state.players
+                    .filter(Boolean)
+                    .length;
+
+            if (
+                activePlayers >= 2
+            ) {
+
+                setText(
+                    "waitingText",
+                    `${activePlayers}/5 players ready. Host can start the auction.`
+                );
+
+                show(
+                    "startBtn",
+                    mySlot === 0
+                );
+
+            }
+            else {
+
+                setText(
+                    "waitingText",
+                    "Waiting for at least one more player to join..."
+                );
+
+                show(
+                    "startBtn",
+                    false
+                );
+
+            }
+
         }
-
-
-        renderWaiting(state);
 
 
         // ---------------------------------------------
@@ -447,12 +666,14 @@ socket.on(
                 true
             );
 
+            setText(
+                "auctionRoom",
+                "ROOM " + state.code
+            );
 
-            $("auctionRoom").textContent =
-                "ROOM " + state.code;
 
-
-            $("progress").textContent =
+            setText(
+                "progress",
                 state.finished
 
                     ? `Auction Complete • ${state.total} players`
@@ -462,7 +683,8 @@ socket.on(
                             state.index,
                             state.total
                         )
-                    } / ${state.total}`;
+                    } / ${state.total}`
+            );
 
         }
 
@@ -471,7 +693,9 @@ socket.on(
         // TEAMS
         // ---------------------------------------------
 
-        renderTeams(state);
+        renderTeams(
+            state
+        );
 
 
         // ---------------------------------------------
@@ -482,37 +706,53 @@ socket.on(
             state.current
         ) {
 
-            $("currentPlayer").textContent =
-                state.current.name;
+            setText(
+                "currentPlayer",
+                state.current.name
+            );
+
+            setText(
+                "currentPosition",
+                state.current.position
+            );
+
+            setText(
+                "currentBid",
+                formatMoney(
+                    state.current.bid
+                )
+            );
 
 
-            $("currentBid").textContent =
-                state.current.bid +
-                " Cr";
+            const bidder =
+                state.current.bidder;
 
+            setText(
+                "highestBidder",
 
-            $("highestBidder").textContent =
-
-                state.current.bidder === null
+                bidder === null ||
+                bidder === undefined
 
                     ? "No bid"
 
                     : state.players[
-                        state.current.bidder
-                    ]?.name || "Unknown";
+                        bidder
+                    ]?.name ||
+                    "Unknown"
+            );
 
 
             // -----------------------------------------
             // AUTHORITATIVE SERVER TIMER
             // -----------------------------------------
 
-            $("timer").textContent =
+            setText(
+                "timer",
 
                 state.paused
-
                     ? "PAUSED"
-
-                    : state.current.timeLeft;
+                    : state.current.timeLeft
+            );
 
 
             // -----------------------------------------
@@ -520,56 +760,94 @@ socket.on(
             // -----------------------------------------
 
             const alreadyHighest =
-                state.current.bidder === mySlot;
+                state.current.bidder ===
+                mySlot;
 
 
-            $("bidBtn").disabled =
-                state.paused ||
-                alreadyHighest;
+            if (bidBtn) {
+
+                bidBtn.disabled =
+                    state.paused ||
+                    alreadyHighest ||
+                    state.finished;
 
 
-            $("bidBtn").textContent =
+                bidBtn.textContent =
+                    alreadyHighest
 
-                alreadyHighest
+                        ? "HIGHEST BID"
 
-                    ? "HIGHEST BID"
+                        : `BID ${formatMoney(
+                            selectedBidAmount
+                        )}`;
 
-                    : "BID +1 Cr";
+            }
 
 
             // -----------------------------------------
             // SOLD
             // -----------------------------------------
 
-            $("sellBtn").disabled =
+            if (sellBtn) {
 
-                state.paused ||
-                state.current.bidder === null;
+                sellBtn.disabled =
+                    state.paused ||
+                    state.current.bidder === null ||
+                    mySlot !== 0;
+
+            }
 
 
             // -----------------------------------------
             // SKIP
             // -----------------------------------------
 
-            $("skipBtn").disabled =
-                state.paused;
+            if (skipBtn) {
+
+                skipBtn.disabled =
+                    state.paused ||
+                    state.finished;
+
+                const votes =
+                    state.skipVotes || 0;
+
+                const required =
+                    state.skipRequired ||
+                    state.players.filter(Boolean).length;
+
+                skipBtn.textContent =
+                    votes > 0
+                        ? `SKIP (${votes}/${required})`
+                        : "SKIP";
+
+            }
 
 
             // -----------------------------------------
-            // PAUSE BUTTON
+            // PAUSE
             // -----------------------------------------
 
-            $("pauseBtn").disabled =
-                mySlot !== 0;
+            if (pauseBtn) {
+
+                pauseBtn.disabled =
+                    mySlot !== 0 ||
+                    state.finished;
+
+                pauseBtn.textContent =
+                    state.paused
+                        ? "▶ RESUME"
+                        : "⏸ PAUSE";
+
+            }
 
 
-            $("pauseBtn").textContent =
+            renderBidButtons(
+                state
+            );
 
-                state.paused
-
-                    ? "▶ RESUME"
-
-                    : "⏸ PAUSE";
+            renderBidHistory(
+                state
+            );
 
         }
 
@@ -582,9 +860,82 @@ socket.on(
             state.finished
         ) {
 
-            renderFinal(state);
+            renderFinal(
+                state
+            );
 
         }
+
+
+        // ---------------------------------------------
+        // CHAT
+        // ---------------------------------------------
+
+        renderChat(
+            state.chat || []
+        );
+
+    }
+);
+
+
+// =====================================================
+// AUCTION FINISHED
+// =====================================================
+
+socket.on(
+    "auctionFinished",
+    data => {
+
+        if (!data) {
+            return;
+        }
+
+        if (data.winner) {
+
+            toast(
+                `🏆 Winner: ${data.winner.name}`
+            );
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// CHAT MESSAGE
+// =====================================================
+
+socket.on(
+    "chatMessage",
+    message => {
+
+        if (!latest) {
+            return;
+        }
+
+        if (!latest.chat) {
+            latest.chat = [];
+        }
+
+        latest.chat.push(
+            message
+        );
+
+        if (
+            latest.chat.length >
+            50
+        ) {
+
+            latest.chat =
+                latest.chat.slice(-50);
+
+        }
+
+        renderChat(
+            latest.chat
+        );
 
     }
 );
@@ -596,7 +947,14 @@ socket.on(
 
 function renderWaiting(state) {
 
-    $("playersWait").innerHTML =
+    const container =
+        el("playersWait");
+
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML =
         state.players
             .map(
                 (player, index) => `
@@ -610,17 +968,25 @@ function renderWaiting(state) {
                         <strong>
                             ${
                                 player
-                                    ? escapeHtml(player.name)
+                                    ? escapeHtml(
+                                        player.name
+                                    )
                                     : "Waiting..."
                             }
                         </strong>
 
                         <div class="hint">
+
                             ${
                                 player
-                                    ? state.purse + " Cr purse"
-                                    : "Send the room code"
+
+                                    ? `${formatMoney(
+                                        player.purse
+                                    )} purse`
+
+                                    : "Waiting for player"
                             }
+
                         </div>
 
                     </div>
@@ -638,14 +1004,27 @@ function renderWaiting(state) {
 
 function renderTeams(state) {
 
-    $("teams").innerHTML =
+    const teamsContainer =
+        el("teams");
+
+    if (
+        !teamsContainer
+    ) {
+        return;
+    }
+
+    const activePlayers =
         state.players
-            .filter(Boolean)
+            .filter(Boolean);
+
+
+    teamsContainer.innerHTML =
+        activePlayers
             .map(
-                (player, index) => `
+                player => `
 
                     <div class="team ${
-                        index === mySlot
+                        player.slot === mySlot
                             ? "you"
                             : ""
                     }">
@@ -659,7 +1038,7 @@ function renderTeams(state) {
                                 )}
 
                                 ${
-                                    index === mySlot
+                                    player.slot === mySlot
                                         ? " • YOU"
                                         : ""
                                 }
@@ -668,7 +1047,9 @@ function renderTeams(state) {
 
                             <div class="purse">
 
-                                ${player.purse} Cr
+                                ${formatMoney(
+                                    player.purse
+                                )}
 
                             </div>
 
@@ -684,17 +1065,35 @@ function renderTeams(state) {
                                         .map(
                                             item => `
 
-                                                ${escapeHtml(
-                                                    item.name
-                                                )}
+                                                <div class="player-row">
 
-                                                <span class="price">
-                                                    ${item.price}Cr
-                                                </span>
+                                                    <span>
+
+                                                        ${escapeHtml(
+                                                            item.name
+                                                        )}
+
+                                                        <small>
+                                                            ${escapeHtml(
+                                                                item.position
+                                                            )}
+                                                        </small>
+
+                                                    </span>
+
+                                                    <span class="price">
+
+                                                        ${formatMoney(
+                                                            item.price
+                                                        )}
+
+                                                    </span>
+
+                                                </div>
 
                                             `
                                         )
-                                        .join(" · ")
+                                        .join("")
 
                                     : "No players bought yet"
                             }
@@ -720,17 +1119,26 @@ function renderTeams(state) {
         );
 
 
-    $("squadCount").textContent =
-        totalSquad + " bought";
+    setText(
+        "squadCount",
+        totalSquad + " bought"
+    );
 
 
-    $("squads").innerHTML = `
+    const squads =
+        el("squads");
+
+    if (!squads) {
+        return;
+    }
+
+
+    squads.innerHTML = `
 
         <div class="squad-grid">
 
             ${
-                state.players
-                    .filter(Boolean)
+                activePlayers
                     .map(
                         player => `
 
@@ -739,14 +1147,18 @@ function renderTeams(state) {
                                 <div class="team-head">
 
                                     <strong>
+
                                         ${escapeHtml(
                                             player.name
                                         )}
+
                                     </strong>
 
                                     <span class="purse">
+
                                         ${player.squad.length}
-                                        players
+                                        / 30 players
+
                                     </span>
 
                                 </div>
@@ -760,14 +1172,25 @@ function renderTeams(state) {
                                                 <div class="player-row">
 
                                                     <span>
+
                                                         ${escapeHtml(
                                                             item.name
                                                         )}
+
+                                                        <small>
+                                                            ${escapeHtml(
+                                                                item.position
+                                                            )}
+                                                        </small>
+
                                                     </span>
 
                                                     <span class="price">
-                                                        ${item.price}
-                                                        Cr
+
+                                                        ${formatMoney(
+                                                            item.price
+                                                        )}
+
                                                     </span>
 
                                                 </div>
@@ -800,6 +1223,437 @@ function renderTeams(state) {
 
 
 // =====================================================
+// BID BUTTONS
+// =====================================================
+
+function renderBidButtons(state) {
+
+    const auction =
+        el("auction");
+
+    if (!auction) {
+        return;
+    }
+
+
+    let container =
+        el("bidOptions");
+
+
+    /*
+     * If the HTML does not contain the
+     * bid options yet, create them automatically.
+     */
+
+    if (!container) {
+
+        container =
+            document.createElement(
+                "div"
+            );
+
+        container.id =
+            "bidOptions";
+
+        container.style.display =
+            "flex";
+
+        container.style.gap =
+            "8px";
+
+        container.style.flexWrap =
+            "wrap";
+
+
+        const controls =
+            bidBtn?.parentElement;
+
+        if (controls) {
+
+            controls.insertBefore(
+                container,
+                bidBtn
+            );
+
+        }
+
+    }
+
+
+    const amounts = [
+        100,
+        250,
+        500,
+        1000000
+    ];
+
+
+    container.innerHTML =
+        amounts
+            .map(
+                amount => `
+
+                    <button
+                        type="button"
+                        class="bid-option ${
+                            selectedBidAmount === amount
+                                ? "active"
+                                : ""
+                        }"
+                        data-bid="${amount}"
+                    >
+
+                        ${formatMoney(
+                            amount
+                        )}
+
+                    </button>
+
+                `
+            )
+            .join("");
+
+
+    container
+        .querySelectorAll(
+            ".bid-option"
+        )
+        .forEach(
+            button => {
+
+                button.onclick = () => {
+
+                    selectedBidAmount =
+                        Number(
+                            button.dataset.bid
+                        );
+
+                    renderBidButtons(
+                        latest
+                    );
+
+                    if (bidBtn) {
+
+                        bidBtn.textContent =
+                            `BID ${formatMoney(
+                                selectedBidAmount
+                            )}`;
+
+                    }
+
+                };
+
+            }
+        );
+
+}
+
+
+// =====================================================
+// BID HISTORY
+// =====================================================
+
+function renderBidHistory(state) {
+
+    let container =
+        el("bidHistory");
+
+
+    if (!container) {
+
+        const auction =
+            el("auction");
+
+        if (!auction) {
+            return;
+        }
+
+        container =
+            document.createElement(
+                "div"
+            );
+
+        container.id =
+            "bidHistory";
+
+        container.className =
+            "bid-history";
+
+        auction.appendChild(
+            container
+        );
+
+    }
+
+
+    const history =
+        state.bidHistory || [];
+
+
+    if (!history.length) {
+
+        container.innerHTML = `
+            <div class="hint">
+                No bids yet
+            </div>
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML = `
+
+        <div class="eyebrow">
+            BIDDING HISTORY
+        </div>
+
+        ${
+            history
+                .slice()
+                .reverse()
+                .slice(0, 30)
+                .map(
+                    item => `
+
+                        <div class="player-row">
+
+                            <span>
+
+                                ${escapeHtml(
+                                    item.bidder
+                                )}
+
+                                •
+
+                                ${escapeHtml(
+                                    item.player
+                                )}
+
+                            </span>
+
+                            <strong>
+
+                                ${formatMoney(
+                                    item.amount
+                                )}
+
+                            </strong>
+
+                        </div>
+
+                    `
+                )
+                .join("")
+        }
+
+    `;
+
+}
+
+
+// =====================================================
+// CHAT
+// =====================================================
+
+function setupChat() {
+
+    let chat =
+        el("chatBox");
+
+    if (!chat) {
+
+        const auction =
+            el("auction");
+
+        if (!auction) {
+            return;
+        }
+
+
+        chat =
+            document.createElement(
+                "div"
+            );
+
+        chat.id =
+            "chatBox";
+
+        chat.className =
+            "chat-box";
+
+
+        chat.innerHTML = `
+
+            <div class="eyebrow">
+                CHAT
+            </div>
+
+            <div
+                id="chatMessages"
+                style="
+                    height:180px;
+                    overflow-y:auto;
+                    margin:10px 0;
+                "
+            ></div>
+
+            <div
+                style="
+                    display:flex;
+                    gap:8px;
+                "
+            >
+
+                <input
+                    id="chatInput"
+                    type="text"
+                    maxlength="300"
+                    placeholder="Type a message..."
+                >
+
+                <button
+                    id="chatSend"
+                    type="button"
+                >
+                    SEND
+                </button>
+
+            </div>
+
+        `;
+
+
+        auction.appendChild(
+            chat
+        );
+
+    }
+
+
+    const input =
+        el("chatInput");
+
+    const send =
+        el("chatSend");
+
+
+    if (
+        input &&
+        send &&
+        !send.dataset.ready
+    ) {
+
+        send.dataset.ready =
+            "1";
+
+
+        function sendMessage() {
+
+            const message =
+                input.value.trim();
+
+            if (!message) {
+                return;
+            }
+
+            socket.emit(
+                "chatMessage",
+                {
+                    message
+                }
+            );
+
+            input.value =
+                "";
+
+            input.focus();
+
+        }
+
+
+        send.onclick =
+            sendMessage;
+
+
+        input.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key ===
+                    "Enter"
+                ) {
+
+                    event.preventDefault();
+
+                    sendMessage();
+
+                }
+
+            }
+        );
+
+    }
+
+}
+
+
+// =====================================================
+// RENDER CHAT
+// =====================================================
+
+function renderChat(messages) {
+
+    setupChat();
+
+
+    const container =
+        el("chatMessages");
+
+    if (!container) {
+        return;
+    }
+
+
+    container.innerHTML =
+        messages
+            .slice(-50)
+            .map(
+                message => `
+
+                    <div
+                        style="
+                            margin-bottom:6px;
+                        "
+                    >
+
+                        <strong>
+                            ${escapeHtml(
+                                message.sender
+                            )}
+                        </strong>
+
+                        :
+
+                        ${escapeHtml(
+                            message.message
+                        )}
+
+                    </div>
+
+                `
+            )
+            .join("");
+
+
+    container.scrollTop =
+        container.scrollHeight;
+
+}
+
+
+// =====================================================
 // FINAL RESULT
 // =====================================================
 
@@ -811,120 +1665,118 @@ function renderFinal(state) {
     );
 
 
-    const [a, b] =
-        state.players;
+    const teams =
+        state.finalTeams ||
+        [];
 
 
-    if (!a || !b) {
-
-        return;
-
-    }
+    const winner =
+        state.winner ||
+        teams[0];
 
 
-    const spending =
-        player =>
-            player.squad.reduce(
-                (sum, item) =>
-                    sum + item.price,
-                0
-            );
-
-
-    let winner;
+    const winnerContainer =
+        el("winner");
 
 
     if (
-        a.squad.length >
-        b.squad.length
+        winnerContainer &&
+        winner
     ) {
 
-        winner = a;
+        winnerContainer.innerHTML = `
+
+            <div class="winner-box">
+
+                <div class="crown">
+                    🏆
+                </div>
+
+                <div class="eyebrow">
+                    AUCTION WINNER
+                </div>
+
+                <div class="winner-name">
+
+                    ${escapeHtml(
+                        winner.name
+                    )}
+
+                </div>
+
+                <div class="hint">
+
+                    Team Score:
+                    ${winner.totalScore}
+
+                </div>
+
+            </div>
+
+        `;
 
     }
 
-    else if (
-        b.squad.length >
-        a.squad.length
+
+    const stats =
+        el("finalStats");
+
+
+    if (
+        !stats
     ) {
-
-        winner = b;
-
-    }
-
-    else {
-
-        winner =
-            spending(a) >=
-            spending(b)
-                ? a
-                : b;
-
+        return;
     }
 
 
-    $("winner").innerHTML = `
-
-        <div class="winner-box">
-
-            <div class="crown">
-                🏆
-            </div>
-
-            <div class="eyebrow">
-                AUCTION WINNER
-            </div>
-
-            <div class="winner-name">
-                ${escapeHtml(
-                    winner.name
-                )}
-            </div>
-
-            <div class="hint">
-                More players acquired.
-                Tie-breaker: total spending.
-            </div>
-
-        </div>
-
-    `;
-
-
-    $("finalStats").innerHTML = `
+    stats.innerHTML = `
 
         <div class="final-grid">
 
             ${
-                state.players
+                teams
                     .map(
-                        player => `
+                        (team, index) => `
 
                             <div class="stat">
 
                                 <strong>
+
+                                    ${
+                                        index === 0
+                                            ? "🏆 "
+                                            : ""
+                                    }
+
                                     ${escapeHtml(
-                                        player.name
+                                        team.name
                                     )}
+
                                 </strong>
 
                                 <div class="hint">
 
-                                    ${player.squad.length}
+                                    ${team.squadSize}
                                     players
 
                                     •
 
-                                    ${player.purse}
-                                    Cr left
+                                    ${formatMoney(
+                                        team.spent
+                                    )}
+                                    spent
 
                                     •
 
-                                    ${
-                                        state.purse -
-                                        player.purse
-                                    }
-                                    Cr spent
+                                    ${formatMoney(
+                                        team.remaining
+                                    )}
+                                    left
+
+                                    •
+
+                                    Score:
+                                    ${team.totalScore}
 
                                 </div>
 
@@ -943,12 +1795,81 @@ function renderFinal(state) {
 
 
 // =====================================================
+// MONEY FORMAT
+// =====================================================
+
+function formatMoney(value) {
+
+    const number =
+        Number(value) || 0;
+
+
+    if (
+        number >=
+        1000000
+    ) {
+
+        if (
+            number %
+            1000000 ===
+            0
+        ) {
+
+            return (
+                "$" +
+                number /
+                1000000 +
+                "M"
+            );
+
+        }
+
+        return (
+            "$" +
+            (
+                number /
+                1000000
+            ).toFixed(2) +
+            "M"
+        );
+
+    }
+
+
+    if (
+        number >=
+        1000
+    ) {
+
+        return (
+            "$" +
+            (
+                number /
+                1000
+            ).toFixed(1) +
+            "K"
+        );
+
+    }
+
+
+    return (
+        "$" +
+        number
+    );
+
+}
+
+
+// =====================================================
 // HTML ESCAPE
 // =====================================================
 
 function escapeHtml(value) {
 
-    return String(value).replace(
+    return String(
+        value ?? ""
+    ).replace(
         /[&<>"']/g,
         character => ({
 
@@ -962,3 +1883,30 @@ function escapeHtml(value) {
     );
 
 }
+
+
+// =====================================================
+// INITIALIZE CHAT
+// =====================================================
+
+setupChat();
+
+
+// =====================================================
+// INITIAL STATE
+// =====================================================
+
+show(
+    "auction",
+    false
+);
+
+show(
+    "waiting",
+    false
+);
+
+show(
+    "resultsCard",
+    false
+);

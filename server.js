@@ -5,95 +5,265 @@ const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 
 app.use(express.static(path.join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
+
 const rooms = new Map();
+
+const MAX_PLAYERS = 5;
+const MAX_SQUAD_SIZE = 30;
+const AUCTION_TIME = 10;
+
+const BID_AMOUNTS = [100, 250, 500, 1000000];
+
+const REQUIRED_POSITIONS = [
+    "LW",
+    "STRIKER",
+    "RW",
+    "CM",
+    "CAM",
+    "CDM",
+    "LB",
+    "CB",
+    "CB",
+    "RB",
+    "GK"
+];
 
 
 // =====================================================
-// TOP FOOTBALL PLAYERS
+// PLAYER DATABASE
 // =====================================================
 
 const PLAYERS = [
-    "Pelé","Lionel Messi","Cristiano Ronaldo","Diego Maradona",
-    "Johan Cruyff","Franz Beckenbauer","Zinedine Zidane",
-    "Ronaldo Nazário","Ronaldinho","Alfredo Di Stéfano",
-    "Ferenc Puskás","Garrincha","Michel Platini","George Best",
-    "Eusébio","Paolo Maldini","Xavi","Andrés Iniesta","Lev Yashin",
-    "Bobby Charlton","Marco van Basten","Romário","Gerd Müller",
-    "Franco Baresi","Ronald Koeman","Lothar Matthäus","Roberto Baggio",
-    "Thierry Henry","Kaká","Luis Suárez","Neymar","Luka Modrić",
-    "Sergio Ramos","Manuel Neuer","Iker Casillas","Gianluigi Buffon",
-    "Cafu","Roberto Carlos","Philipp Lahm","Andrea Pirlo",
-    "Steven Gerrard","Frank Lampard","Paul Scholes","Kevin De Bruyne",
-    "Eden Hazard","Arjen Robben","Franck Ribéry","Mohamed Salah",
-    "Karim Benzema","Robert Lewandowski","Erling Haaland",
-    "Kylian Mbappé","Virgil van Dijk","Sergio Busquets",
-    "Sergio Agüero","Didier Drogba","Samuel Eto'o","David Villa",
-    "Wayne Rooney","Zlatan Ibrahimović","George Weah",
-    "Andriy Shevchenko","Ruud van Nistelrooy","Dennis Bergkamp",
-    "Eric Cantona","Alan Shearer","Gary Lineker","Raúl",
-    "David Beckham","Ryan Giggs","Patrick Vieira","Claude Makélélé",
-    "Roy Keane","Nemanja Vidić","John Terry","Carles Puyol",
-    "Fabio Cannavaro","Alessandro Nesta","Javier Zanetti","Dani Alves",
-    "Marcelo","Ashley Cole","Lilian Thuram","Jaap Stam",
-    "Rio Ferdinand","Kevin Keegan","Kenny Dalglish","Ian Rush",
-    "Luis Figo","Michael Laudrup","Hristo Stoichkov","Sócrates",
-    "Zico","Rivaldo","Didi","Nilton Santos","Carlos Alberto",
-    "Rivelino","Jairzinho","Tostão","Gerson","Mario Kempes",
-    "Daniel Passarella","Gabriel Batistuta","Javier Saviola",
-    "Juan Román Riquelme","Pablo Aimar","Juan Sebastián Verón",
-    "Hernán Crespo","Jorge Valdano","Fernando Redondo",
-    "Esteban Cambiasso","Javier Mascherano","Ángel Di María",
-    "Santi Cazorla","David Silva","Xabi Alonso","Mesut Özil",
-    "Toni Kroos","Bastian Schweinsteiger","Thomas Müller",
-    "Miroslav Klose","Wesley Sneijder","Clarence Seedorf",
-    "Edgar Davids","Ruud Gullit","Frank Rijkaard","Dennis Wise",
-    "Patrick Kluivert","Edwin van der Sar","Petr Čech","Oliver Kahn",
-    "Dino Zoff","Walter Zenga","Gordon Banks","Peter Schmeichel",
-    "Hugo Sánchez","Johan Neeskens","Marco Tardelli","Andrea Barzagli",
-    "Giorgio Chiellini","Leonardo Bonucci","Thiago Silva",
-    "Marquinhos","Casemiro","Fernandinho","Rodri","N'Golo Kanté",
-    "Paul Pogba","Yaya Touré","Cesc Fàbregas","David Trezeguet",
-    "Fernando Torres","Antoine Griezmann","Harry Kane",
-    "Son Heung-min","Sadio Mané","Riyad Mahrez","Vinícius Júnior",
-    "Rodrygo","Phil Foden","Bukayo Saka","Jude Bellingham","Pedri",
-    "Gavi","Bernardo Silva","Bruno Fernandes","Martin Ødegaard",
-    "Luis Suárez Miramontes","Héctor Chumpitaz","Teófilo Cubillas",
-    "Elias Figueroa","Obdulio Varela","José Nasazzi","Josef Masopust",
-    "Raymond Kopa","Just Fontaine","Sándor Kocsis","László Kubala",
-    "Gunnar Nordahl","Davor Šuker","Rui Costa","Deco",
-    "Ricardo Carvalho"
-];
 
-const PLAYER_POOL = [...new Set(PLAYERS)];
+    // =========================
+    // GK
+    // =========================
+
+    { name: "Lev Yashin", position: "GK" },
+    { name: "Gianluigi Buffon", position: "GK" },
+    { name: "Manuel Neuer", position: "GK" },
+    { name: "Iker Casillas", position: "GK" },
+    { name: "Peter Schmeichel", position: "GK" },
+    { name: "Oliver Kahn", position: "GK" },
+    { name: "Edwin van der Sar", position: "GK" },
+    { name: "Alisson Becker", position: "GK" },
+    { name: "Thibaut Courtois", position: "GK" },
+    { name: "Jan Oblak", position: "GK" },
+    { name: "Emiliano Martinez", position: "GK" },
+    { name: "Gianluigi Donnarumma", position: "GK" },
+
+    // =========================
+    // LB
+    // =========================
+
+    { name: "Roberto Carlos", position: "LB" },
+    { name: "Paolo Maldini", position: "LB" },
+    { name: "Marcelo", position: "LB" },
+    { name: "Ashley Cole", position: "LB" },
+    { name: "Philipp Lahm", position: "LB" },
+    { name: "Jordi Alba", position: "LB" },
+    { name: "Theo Hernandez", position: "LB" },
+    { name: "Alphonso Davies", position: "LB" },
+    { name: "Nuno Mendes", position: "LB" },
+    { name: "Andrew Robertson", position: "LB" },
+
+    // =========================
+    // CB
+    // =========================
+
+    { name: "Franz Beckenbauer", position: "CB" },
+    { name: "Paolo Maldini", position: "CB" },
+    { name: "Franco Baresi", position: "CB" },
+    { name: "Alessandro Nesta", position: "CB" },
+    { name: "Sergio Ramos", position: "CB" },
+    { name: "Rio Ferdinand", position: "CB" },
+    { name: "Nemanja Vidic", position: "CB" },
+    { name: "Carles Puyol", position: "CB" },
+    { name: "Virgil van Dijk", position: "CB" },
+    { name: "William Saliba", position: "CB" },
+    { name: "Ruben Dias", position: "CB" },
+    { name: "Antonio Rudiger", position: "CB" },
+    { name: "Fabio Cannavaro", position: "CB" },
+    { name: "Thiago Silva", position: "CB" },
+    { name: "Giorgio Chiellini", position: "CB" },
+    { name: "Leonardo Bonucci", position: "CB" },
+
+    // =========================
+    // RB
+    // =========================
+
+    { name: "Cafu", position: "RB" },
+    { name: "Carlos Alberto", position: "RB" },
+    { name: "Dani Alves", position: "RB" },
+    { name: "Philipp Lahm", position: "RB" },
+    { name: "Javier Zanetti", position: "RB" },
+    { name: "Lilian Thuram", position: "RB" },
+    { name: "Trent Alexander-Arnold", position: "RB" },
+    { name: "Achraf Hakimi", position: "RB" },
+    { name: "Kyle Walker", position: "RB" },
+    { name: "Reece James", position: "RB" },
+    { name: "Joao Cancelo", position: "RB" },
+
+    // =========================
+    // CDM
+    // =========================
+
+    { name: "Ruud Gullit", position: "CDM" },
+    { name: "Lothar Matthaus", position: "CDM" },
+    { name: "Claude Makelele", position: "CDM" },
+    { name: "Patrick Vieira", position: "CDM" },
+    { name: "Frank Rijkaard", position: "CDM" },
+    { name: "Sergio Busquets", position: "CDM" },
+    { name: "Xabi Alonso", position: "CDM" },
+    { name: "Andrea Pirlo", position: "CDM" },
+    { name: "Casemiro", position: "CDM" },
+    { name: "Rodri", position: "CDM" },
+    { name: "N'Golo Kante", position: "CDM" },
+    { name: "Yaya Toure", position: "CDM" },
+
+    // =========================
+    // CM
+    // =========================
+
+    { name: "Zinedine Zidane", position: "CM" },
+    { name: "Xavi", position: "CM" },
+    { name: "Andres Iniesta", position: "CM" },
+    { name: "Luka Modric", position: "CM" },
+    { name: "Steven Gerrard", position: "CM" },
+    { name: "Frank Lampard", position: "CM" },
+    { name: "Paul Scholes", position: "CM" },
+    { name: "Clarence Seedorf", position: "CM" },
+    { name: "Kevin De Bruyne", position: "CM" },
+    { name: "Toni Kroos", position: "CM" },
+    { name: "Jude Bellingham", position: "CM" },
+    { name: "Pedri", position: "CM" },
+    { name: "Federico Valverde", position: "CM" },
+    { name: "Bastian Schweinsteiger", position: "CM" },
+
+    // =========================
+    // CAM
+    // =========================
+
+    { name: "Diego Maradona", position: "CAM" },
+    { name: "Johan Cruyff", position: "CAM" },
+    { name: "Ronaldinho", position: "CAM" },
+    { name: "Kaka", position: "CAM" },
+    { name: "Michel Platini", position: "CAM" },
+    { name: "Roberto Baggio", position: "CAM" },
+    { name: "Dennis Bergkamp", position: "CAM" },
+    { name: "Zico", position: "CAM" },
+    { name: "Francesco Totti", position: "CAM" },
+    { name: "Juan Roman Riquelme", position: "CAM" },
+    { name: "Kevin De Bruyne", position: "CAM" },
+    { name: "Bruno Fernandes", position: "CAM" },
+    { name: "Mesut Ozil", position: "CAM" },
+    { name: "Jamal Musiala", position: "CAM" },
+    { name: "Martin Odegaard", position: "CAM" },
+
+    // =========================
+    // LW
+    // =========================
+
+    { name: "Cristiano Ronaldo", position: "LW" },
+    { name: "Ronaldinho", position: "LW" },
+    { name: "Neymar Jr", position: "LW" },
+    { name: "Thierry Henry", position: "LW" },
+    { name: "Rivaldo", position: "LW" },
+    { name: "George Best", position: "LW" },
+    { name: "Ryan Giggs", position: "LW" },
+    { name: "Vinicius Jr", position: "LW" },
+    { name: "Kylian Mbappe", position: "LW" },
+    { name: "Sadio Mane", position: "LW" },
+    { name: "Rafael Leao", position: "LW" },
+    { name: "Khvicha Kvaratskhelia", position: "LW" },
+    { name: "Son Heung-min", position: "LW" },
+
+    // =========================
+    // RW
+    // =========================
+
+    { name: "Lionel Messi", position: "RW" },
+    { name: "Garrincha", position: "RW" },
+    { name: "Luis Figo", position: "RW" },
+    { name: "David Beckham", position: "RW" },
+    { name: "Mohamed Salah", position: "RW" },
+    { name: "Arjen Robben", position: "RW" },
+    { name: "George Best", position: "RW" },
+    { name: "Bukayo Saka", position: "RW" },
+    { name: "Lamine Yamal", position: "RW" },
+    { name: "Rodrygo", position: "RW" },
+    { name: "Riyad Mahrez", position: "RW" },
+
+    // =========================
+    // STRIKER
+    // =========================
+
+    { name: "Pele", position: "STRIKER" },
+    { name: "Ronaldo Nazario", position: "STRIKER" },
+    { name: "Cristiano Ronaldo", position: "STRIKER" },
+    { name: "Lionel Messi", position: "STRIKER" },
+    { name: "Marco van Basten", position: "STRIKER" },
+    { name: "Gerd Muller", position: "STRIKER" },
+    { name: "Romario", position: "STRIKER" },
+    { name: "Ferenc Puskas", position: "STRIKER" },
+    { name: "Eusebio", position: "STRIKER" },
+    { name: "Gabriel Batistuta", position: "STRIKER" },
+    { name: "Thierry Henry", position: "STRIKER" },
+    { name: "Robert Lewandowski", position: "STRIKER" },
+    { name: "Luis Suarez", position: "STRIKER" },
+    { name: "Karim Benzema", position: "STRIKER" },
+    { name: "Erling Haaland", position: "STRIKER" },
+    { name: "Kylian Mbappe", position: "STRIKER" },
+    { name: "Zlatan Ibrahimovic", position: "STRIKER" },
+    { name: "Samuel Eto'o", position: "STRIKER" },
+    { name: "Didier Drogba", position: "STRIKER" },
+    { name: "Harry Kane", position: "STRIKER" },
+    { name: "Wayne Rooney", position: "STRIKER" },
+    { name: "Fernando Torres", position: "STRIKER" },
+    { name: "Sergio Aguero", position: "STRIKER" },
+    { name: "David Villa", position: "STRIKER" },
+    { name: "Andriy Shevchenko", position: "STRIKER" },
+    { name: "Ruud van Nistelrooy", position: "STRIKER" },
+    { name: "Alan Shearer", position: "STRIKER" }
+];
 
 
 // =====================================================
-// SHUFFLE
+// HELPERS
 // =====================================================
 
 function shuffle(array) {
-
     for (let i = array.length - 1; i > 0; i--) {
-
         const j = Math.floor(Math.random() * (i + 1));
 
-        [array[i], array[j]] =
-        [array[j], array[i]];
-
+        [array[i], array[j]] = [array[j], array[i]];
     }
 
     return array;
 }
 
 
-// =====================================================
-// CREATE ROOM
-// =====================================================
+function createPlayerPool() {
+    return shuffle(
+        PLAYERS.map((player, index) => ({
+            id: `${index}-${player.name}`,
+            name: player.name,
+            position: player.position
+        }))
+    );
+}
+
 
 function makeRoom(code, purse) {
 
@@ -102,7 +272,7 @@ function makeRoom(code, purse) {
         code,
         purse,
 
-        players: [null, null],
+        players: Array(MAX_PLAYERS).fill(null),
 
         started: false,
         finished: false,
@@ -115,14 +285,133 @@ function makeRoom(code, purse) {
         timer: null,
         nextTimer: null,
 
-        timeLeft: 10,
+        timeLeft: AUCTION_TIME,
 
-        playerQueue: shuffle([...PLAYER_POOL]),
+        playerQueue: createPlayerPool(),
 
-        results: []
+        results: [],
+
+        bidHistory: [],
+
+        skipVotes: new Set(),
+
+        chat: []
 
     };
+}
 
+
+// =====================================================
+// POSITION HELPERS
+// =====================================================
+
+function countPosition(squad, position) {
+
+    return squad.filter(
+        player => player.position === position
+    ).length;
+}
+
+
+function requiredPositionCount(position) {
+
+    return REQUIRED_POSITIONS.filter(
+        p => p === position
+    ).length;
+}
+
+
+function canAddPlayerToSquad(player, auctionPlayer) {
+
+    if (!player || !auctionPlayer) {
+        return false;
+    }
+
+    if (player.squad.length >= MAX_SQUAD_SIZE) {
+        return false;
+    }
+
+    const position = auctionPlayer.position;
+
+    const currentCount =
+        countPosition(player.squad, position);
+
+    const maximum =
+        requiredPositionCount(position);
+
+    /*
+     * Allow normal bench players after the starting
+     * position has been filled.
+     *
+     * Once a position has reached its required count,
+     * another player of the same position can still
+     * be bought as a bench player.
+     */
+
+    return true;
+}
+
+
+function getMissingPositions(player) {
+
+    if (!player) {
+        return [...REQUIRED_POSITIONS];
+    }
+
+    const missing = [];
+
+    const counts = {};
+
+    for (const position of REQUIRED_POSITIONS) {
+        counts[position] =
+            (counts[position] || 0) + 1;
+    }
+
+    for (const required of Object.keys(counts)) {
+
+        const owned =
+            countPosition(
+                player.squad,
+                required
+            );
+
+        const needed =
+            counts[required];
+
+        for (let i = owned; i < needed; i++) {
+            missing.push(required);
+        }
+    }
+
+    return missing;
+}
+
+
+function mustFillPosition(player, auctionPlayer) {
+
+    if (!player || !auctionPlayer) {
+        return false;
+    }
+
+    const missing =
+        getMissingPositions(player);
+
+    /*
+     * If the player has 30 players already,
+     * no purchase is allowed.
+     */
+
+    if (player.squad.length >= MAX_SQUAD_SIZE) {
+        return true;
+    }
+
+    /*
+     * If the squad is approaching the starting XI
+     * and the auction player can fill a missing position,
+     * allow it normally.
+     */
+
+    return false;
 }
 
 
@@ -140,21 +429,32 @@ function publicState(room) {
 
         players: room.players.map(player => {
 
-            if (!player) return null;
+            if (!player) {
+                return null;
+            }
 
             return {
 
                 id: player.id,
+
                 name: player.name,
+
                 purse: player.purse,
-                squad: player.squad
+
+                squad: player.squad,
+
+                slot: player.slot
 
             };
 
         }),
 
+        maxPlayers: MAX_PLAYERS,
+
         started: room.started,
+
         finished: room.finished,
+
         paused: room.paused,
 
         index: room.index,
@@ -164,24 +464,40 @@ function publicState(room) {
         current: room.current
             ? {
 
+                id: room.current.id,
+
                 name: room.current.name,
+
+                position: room.current.position,
+
                 base: room.current.base,
+
                 bid: room.current.bid,
+
                 bidder: room.current.bidder,
+
                 timeLeft: room.timeLeft
 
             }
             : null,
 
-        results: room.results
+        results: room.results,
+
+        bidHistory: room.bidHistory,
+
+        skipVotes: room.skipVotes.size,
+
+        skipRequired:
+            room.players.filter(Boolean).length,
+
+        chat: room.chat.slice(-50)
 
     };
-
 }
 
 
 // =====================================================
-// SEND STATE TO BOTH PLAYERS
+// EMIT STATE
 // =====================================================
 
 function emitState(room) {
@@ -195,7 +511,7 @@ function emitState(room) {
 
 
 // =====================================================
-// STOP TIMER
+// TIMER
 // =====================================================
 
 function stopTimer(room) {
@@ -211,10 +527,6 @@ function stopTimer(room) {
 }
 
 
-// =====================================================
-// CLEAR NEXT PLAYER TIMER
-// =====================================================
-
 function clearNextTimer(room) {
 
     if (room.nextTimer) {
@@ -227,10 +539,6 @@ function clearNextTimer(room) {
 
 }
 
-
-// =====================================================
-// START TIMER
-// =====================================================
 
 function startTimer(room) {
 
@@ -247,7 +555,6 @@ function startTimer(room) {
 
     }
 
-
     room.timer = setInterval(() => {
 
         if (
@@ -261,15 +568,12 @@ function startTimer(room) {
 
         }
 
-
-        room.timeLeft -= 1;
-
+        room.timeLeft--;
 
         io.to(room.code).emit(
             "tick",
             room.timeLeft
         );
-
 
         if (room.timeLeft <= 0) {
 
@@ -290,58 +594,54 @@ function startTimer(room) {
 
 
 // =====================================================
-// START NEXT PLAYER
+// NEXT PLAYER
 // =====================================================
 
 function nextPlayer(room) {
 
     stopTimer(room);
+
     clearNextTimer(room);
 
+    room.skipVotes.clear();
 
     if (
         room.index >=
         room.playerQueue.length
     ) {
 
-        room.finished = true;
-        room.started = false;
-        room.paused = false;
-        room.current = null;
-
-        emitState(room);
+        finishAuction(room);
 
         return;
 
     }
 
-
-    const name =
+    const auctionPlayer =
         room.playerQueue[room.index];
 
-    room.index += 1;
-
+    room.index++;
 
     room.current = {
 
-        name,
+        id: auctionPlayer.id,
 
-        base: 1,
+        name: auctionPlayer.name,
 
-        bid: 1,
+        position: auctionPlayer.position,
+
+        base: 100,
+
+        bid: 100,
 
         bidder: null
 
     };
 
-
-    room.timeLeft = 10;
+    room.timeLeft = AUCTION_TIME;
 
     room.paused = false;
 
-
     emitState(room);
-
 
     startTimer(room);
 
@@ -355,19 +655,15 @@ function nextPlayer(room) {
 function sellOrSkip(room, action) {
 
     stopTimer(room);
+
     clearNextTimer(room);
 
-
     if (!room.current) {
-
         return;
-
     }
-
 
     const current =
         room.current;
-
 
     if (
         action === "sold" &&
@@ -377,33 +673,47 @@ function sellOrSkip(room, action) {
         const buyer =
             room.players[current.bidder];
 
+        if (!buyer) {
+            return;
+        }
 
         if (
-            buyer &&
-            buyer.purse >= current.bid
+            buyer.purse <
+            current.bid
         ) {
-
-            buyer.purse -= current.bid;
-
-
-            buyer.squad.push({
-
-                name: current.name,
-
-                price: current.bid
-
-            });
-
 
             room.results.push({
 
                 player: current.name,
 
-                status: "SOLD",
+                position: current.position,
 
-                team: buyer.name,
+                status: "SKIPPED",
 
-                price: current.bid
+                team: null,
+
+                price: 0
+
+            });
+
+        }
+
+        else if (
+            buyer.squad.length >=
+            MAX_SQUAD_SIZE
+        ) {
+
+            room.results.push({
+
+                player: current.name,
+
+                position: current.position,
+
+                status: "SKIPPED",
+
+                team: null,
+
+                price: 0
 
             });
 
@@ -411,15 +721,32 @@ function sellOrSkip(room, action) {
 
         else {
 
+            buyer.purse -=
+                current.bid;
+
+            buyer.squad.push({
+
+                id: current.id,
+
+                name: current.name,
+
+                position: current.position,
+
+                price: current.bid
+
+            });
+
             room.results.push({
 
                 player: current.name,
 
-                status: "SKIPPED",
+                position: current.position,
 
-                team: null,
+                status: "SOLD",
 
-                price: 0
+                team: buyer.name,
+
+                price: current.bid
 
             });
 
@@ -433,6 +760,8 @@ function sellOrSkip(room, action) {
 
             player: current.name,
 
+            position: current.position,
+
             status: "SKIPPED",
 
             team: null,
@@ -443,17 +772,15 @@ function sellOrSkip(room, action) {
 
     }
 
-
     room.current = null;
 
+    room.skipVotes.clear();
 
     emitState(room);
-
 
     room.nextTimer = setTimeout(() => {
 
         room.nextTimer = null;
-
 
         if (
             room.started &&
@@ -465,6 +792,109 @@ function sellOrSkip(room, action) {
         }
 
     }, 700);
+
+}
+
+
+// =====================================================
+// FINISH AUCTION
+// =====================================================
+
+function finishAuction(room) {
+
+    stopTimer(room);
+
+    clearNextTimer(room);
+
+    room.finished = true;
+
+    room.started = false;
+
+    room.paused = false;
+
+    room.current = null;
+
+    const teams = room.players
+        .filter(Boolean)
+        .map(player => {
+
+            const totalSpent =
+                player.squad.reduce(
+                    (sum, p) =>
+                        sum + Number(p.price || 0),
+                    0
+                );
+
+            const positionScore =
+                getTeamPositionScore(
+                    player
+                );
+
+            const squadScore =
+                player.squad.length * 10;
+
+            return {
+
+                slot: player.slot,
+
+                name: player.name,
+
+                squadSize:
+                    player.squad.length,
+
+                spent: totalSpent,
+
+                remaining:
+                    player.purse,
+
+                positionScore,
+
+                squadScore,
+
+                totalScore:
+                    positionScore +
+                    squadScore
+
+            };
+
+        });
+
+    teams.sort(
+        (a, b) =>
+            b.totalScore -
+            a.totalScore
+    );
+
+    room.finalTeams = teams;
+
+    room.winner =
+        teams.length
+            ? teams[0]
+            : null;
+
+    emitState(room);
+
+    io.to(room.code).emit(
+        "auctionFinished",
+        {
+            teams,
+            winner: room.winner
+        }
+    );
+
+}
+
+
+function getTeamPositionScore(player) {
+
+    const missing =
+        getMissingPositions(player);
+
+    const filled =
+        REQUIRED_POSITIONS.length -
+        missing.length;
+
+    return filled * 100;
 
 }
 
@@ -486,24 +916,21 @@ io.on("connection", socket => {
 
             purse = Number(purse);
 
-
             if (
-                ![100, 200, 300]
-                    .includes(purse)
+                !Number.isFinite(purse) ||
+                purse <= 0
             ) {
 
                 socket.emit(
                     "errorMsg",
-                    "Choose 100, 200 or 300 Cr."
+                    "Enter a valid purse."
                 );
 
                 return;
 
             }
 
-
             let code;
-
 
             do {
 
@@ -516,10 +943,11 @@ io.on("connection", socket => {
             }
             while (rooms.has(code));
 
-
             const room =
-                makeRoom(code, purse);
-
+                makeRoom(
+                    code,
+                    purse
+                );
 
             room.players[0] = {
 
@@ -533,26 +961,29 @@ io.on("connection", socket => {
 
                 purse,
 
-                squad: []
+                squad: [],
+
+                slot: 0
 
             };
 
-
-            rooms.set(code, room);
-
+            rooms.set(
+                code,
+                room
+            );
 
             socket.join(code);
 
-            socket.data.room = code;
+            socket.data.room =
+                code;
 
-            socket.data.slot = 0;
-
+            socket.data.slot =
+                0;
 
             socket.emit(
                 "roomCreated",
                 code
             );
-
 
             emitState(room);
 
@@ -573,10 +1004,8 @@ io.on("connection", socket => {
                     .trim()
                     .toUpperCase();
 
-
             const room =
                 rooms.get(code);
-
 
             if (!room) {
 
@@ -589,19 +1018,6 @@ io.on("connection", socket => {
 
             }
 
-
-            if (room.players[1]) {
-
-                socket.emit(
-                    "errorMsg",
-                    "This room already has 2 players."
-                );
-
-                return;
-
-            }
-
-
             if (room.started) {
 
                 socket.emit(
@@ -613,36 +1029,54 @@ io.on("connection", socket => {
 
             }
 
+            const slot =
+                room.players.findIndex(
+                    player =>
+                        player === null
+                );
 
-            room.players[1] = {
+            if (slot === -1) {
+
+                socket.emit(
+                    "errorMsg",
+                    "Room is full. Maximum 5 players."
+                );
+
+                return;
+
+            }
+
+            room.players[slot] = {
 
                 id: socket.id,
 
                 name:
                     String(
                         name ||
-                        "Player 2"
+                        `Player ${slot + 1}`
                     ).slice(0, 20),
 
-                purse: room.purse,
+                purse:
+                    room.purse,
 
-                squad: []
+                squad: [],
+
+                slot
 
             };
 
-
             socket.join(code);
 
-            socket.data.room = code;
+            socket.data.room =
+                code;
 
-            socket.data.slot = 1;
-
+            socket.data.slot =
+                slot;
 
             socket.emit(
                 "joined",
                 code
             );
-
 
             emitState(room);
 
@@ -663,60 +1097,71 @@ io.on("connection", socket => {
                     socket.data.room
                 );
 
-
-            if (
-                !room ||
-                socket.data.slot !== 0
-            ) {
-
+            if (!room) {
                 return;
-
             }
 
+            if (
+                socket.data.slot !== 0
+            ) {
+                return;
+            }
 
-            if (!room.players[1]) {
+            const activePlayers =
+                room.players.filter(Boolean);
+
+            if (
+                activePlayers.length < 2
+            ) {
 
                 socket.emit(
                     "errorMsg",
-                    "Your friend must join first."
+                    "At least 2 players are required."
                 );
 
                 return;
 
             }
 
-
             if (room.started) {
-
                 return;
-
             }
 
-
             stopTimer(room);
+
             clearNextTimer(room);
 
-
             room.started = true;
+
             room.finished = false;
+
             room.paused = false;
 
             room.index = 0;
 
             room.results = [];
 
+            room.bidHistory = [];
+
+            room.chat = [];
+
             room.playerQueue =
-                shuffle([...PLAYER_POOL]);
+                createPlayerPool();
 
+            room.players.forEach(
+                player => {
 
-            room.players.forEach(player => {
+                    if (!player) {
+                        return;
+                    }
 
-                player.purse = room.purse;
+                    player.purse =
+                        room.purse;
 
-                player.squad = [];
+                    player.squad = [];
 
-            });
-
+                }
+            );
 
             nextPlayer(room);
 
@@ -730,13 +1175,12 @@ io.on("connection", socket => {
 
     socket.on(
         "bid",
-        () => {
+        data => {
 
             const room =
                 rooms.get(
                     socket.data.room
                 );
-
 
             if (
                 !room ||
@@ -745,48 +1189,77 @@ io.on("connection", socket => {
                 room.paused ||
                 !room.current
             ) {
-
                 return;
-
             }
-
 
             const slot =
                 socket.data.slot;
 
-
             const player =
                 room.players[slot];
 
-
             if (!player) {
-
                 return;
-
             }
 
-
-            // IMPORTANT:
-            // bidder can be 0, so DON'T use
-            // simple truthy checks here.
-
             if (
-                room.current.bidder === slot
+                room.current.bidder ===
+                slot
             ) {
 
                 return;
 
             }
 
+            let requestedAmount =
+                data &&
+                typeof data.amount !==
+                "undefined"
+                    ? Number(data.amount)
+                    : null;
 
-            const nextBid =
-                room.current.bidder !== null
-                    ? room.current.bid + 1
-                    : room.current.base;
+            let nextBid;
 
+            /*
+             * New bidding system:
+             *
+             * $100
+             * $250
+             * $500
+             * $1M
+             *
+             * If the client sends an exact
+             * amount, use that amount.
+             *
+             * Otherwise calculate the next
+             * normal increment.
+             */
 
             if (
-                player.purse < nextBid
+                BID_AMOUNTS.includes(
+                    requestedAmount
+                ) &&
+                requestedAmount >
+                room.current.bid
+            ) {
+
+                nextBid =
+                    requestedAmount;
+
+            }
+
+            else {
+
+                nextBid =
+                    getNextBid(
+                        room.current.bid
+                    );
+
+            }
+
+            if (
+                player.purse <
+                nextBid
             ) {
 
                 socket.emit(
@@ -798,33 +1271,43 @@ io.on("connection", socket => {
 
             }
 
-
             room.current.bid =
                 nextBid;
-
 
             room.current.bidder =
                 slot;
 
+            room.bidHistory.push({
 
-            // =========================================
-            // THE IMPORTANT TIMER FIX
-            // =========================================
+                player:
+                    room.current.name,
 
-            room.timeLeft = 10;
+                position:
+                    room.current.position,
 
+                bidder:
+                    player.name,
 
-            // Stop the OLD countdown.
+                slot,
+
+                amount:
+                    nextBid,
+
+                time:
+                    Date.now()
+
+            });
+
+            /*
+             * IMPORTANT TIMER RESET
+             */
+
+            room.timeLeft =
+                AUCTION_TIME;
 
             stopTimer(room);
 
-
-            // Tell BOTH players immediately.
-
             emitState(room);
-
-
-            // Start a completely NEW 10-second timer.
 
             startTimer(room);
 
@@ -845,7 +1328,6 @@ io.on("connection", socket => {
                     socket.data.room
                 );
 
-
             if (
                 !room ||
                 !room.started ||
@@ -853,16 +1335,37 @@ io.on("connection", socket => {
                 room.paused ||
                 !room.current
             ) {
-
                 return;
-
             }
 
+            const slot =
+                socket.data.slot;
 
-            sellOrSkip(
-                room,
-                "skip"
-            );
+            room.skipVotes.add(slot);
+
+            emitState(room);
+
+            const activePlayers =
+                room.players
+                    .filter(Boolean);
+
+            /*
+             * EVERY MEMBER MUST PRESS SKIP
+             */
+
+            if (
+                room.skipVotes.size >=
+                activePlayers.length
+            ) {
+
+                room.skipVotes.clear();
+
+                sellOrSkip(
+                    room,
+                    "skip"
+                );
+
+            }
 
         }
     );
@@ -881,7 +1384,6 @@ io.on("connection", socket => {
                     socket.data.room
                 );
 
-
             if (
                 !room ||
                 !room.started ||
@@ -889,14 +1391,12 @@ io.on("connection", socket => {
                 room.paused ||
                 !room.current
             ) {
-
                 return;
-
             }
 
-
             if (
-                room.current.bidder === null
+                room.current.bidder ===
+                null
             ) {
 
                 socket.emit(
@@ -908,6 +1408,17 @@ io.on("connection", socket => {
 
             }
 
+            /*
+             * Only host can confirm SOLD.
+             */
+
+            if (
+                socket.data.slot !== 0
+            ) {
+
+                return;
+
+            }
 
             sellOrSkip(
                 room,
@@ -931,9 +1442,6 @@ io.on("connection", socket => {
                     socket.data.room
                 );
 
-
-            // Only host can pause.
-
             if (
                 !room ||
                 socket.data.slot !== 0 ||
@@ -946,14 +1454,10 @@ io.on("connection", socket => {
 
             }
 
-
             room.paused =
                 !room.paused;
 
-
             if (room.paused) {
-
-                // FREEZE TIMER
 
                 stopTimer(room);
 
@@ -961,17 +1465,91 @@ io.on("connection", socket => {
 
             else {
 
-                // CONTINUE TIMER
-
                 startTimer(room);
 
             }
 
-
-            // Both players receive
-            // the same state.
-
             emitState(room);
+
+        }
+    );
+
+
+    // =================================================
+    // CHAT
+    // =================================================
+
+    socket.on(
+        "chatMessage",
+        data => {
+
+            const room =
+                rooms.get(
+                    socket.data.room
+                );
+
+            if (!room) {
+                return;
+            }
+
+            const player =
+                room.players[
+                    socket.data.slot
+                ];
+
+            if (!player) {
+                return;
+            }
+
+            const message =
+                String(
+                    data &&
+                    data.message ||
+                    ""
+                )
+                    .trim()
+                    .slice(0, 300);
+
+            if (!message) {
+                return;
+            }
+
+            const chatMessage = {
+
+                id:
+                    `${Date.now()}-${Math.random()}`,
+
+                sender:
+                    player.name,
+
+                slot:
+                    player.slot,
+
+                message,
+
+                time:
+                    Date.now()
+
+            };
+
+            room.chat.push(
+                chatMessage
+            );
+
+            if (
+                room.chat.length >
+                100
+            ) {
+
+                room.chat =
+                    room.chat.slice(-100);
+
+            }
+
+            io.to(room.code).emit(
+                "chatMessage",
+                chatMessage
+            );
 
         }
     );
@@ -990,7 +1568,6 @@ io.on("connection", socket => {
                     socket.data.room
                 );
 
-
             if (!room) {
 
                 socket.disconnect(true);
@@ -999,19 +1576,24 @@ io.on("connection", socket => {
 
             }
 
-
             stopTimer(room);
-            clearNextTimer(room);
 
+            clearNextTimer(room);
 
             io.to(room.code).emit(
                 "errorMsg",
-                "A player left the room. The room is closed."
+                `${room.players[
+                    socket.data.slot
+                ]?.name || "A player"} left the room.`
             );
 
+            rooms.delete(
+                room.code
+            );
 
-            rooms.delete(room.code);
-
+            io.to(room.code).emit(
+                "roomClosed"
+            );
 
             socket.disconnect(true);
 
@@ -1032,45 +1614,63 @@ io.on("connection", socket => {
                     socket.data.room
                 );
 
-
             if (
                 !room ||
-                socket.data.slot !== 0 ||
-                !room.players[1]
+                socket.data.slot !== 0
             ) {
 
                 return;
 
             }
 
+            const activePlayers =
+                room.players.filter(Boolean);
+
+            if (
+                activePlayers.length < 2
+            ) {
+
+                return;
+
+            }
 
             stopTimer(room);
+
             clearNextTimer(room);
 
-
             room.started = true;
+
             room.finished = false;
+
             room.paused = false;
 
             room.index = 0;
 
             room.results = [];
 
+            room.bidHistory = [];
+
             room.current = null;
 
+            room.skipVotes.clear();
+
             room.playerQueue =
-                shuffle([...PLAYER_POOL]);
+                createPlayerPool();
 
+            room.players.forEach(
+                player => {
 
-            room.players.forEach(player => {
+                    if (!player) {
+                        return;
+                    }
 
-                player.purse =
-                    room.purse;
+                    player.purse =
+                        room.purse;
 
-                player.squad = [];
+                    player.squad = [];
 
-            });
-
+                }
+            );
 
             nextPlayer(room);
 
@@ -1089,29 +1689,62 @@ io.on("connection", socket => {
             const code =
                 socket.data.room;
 
-
             const room =
                 rooms.get(code);
 
-
             if (!room) {
-
                 return;
-
             }
 
-
             stopTimer(room);
+
             clearNextTimer(room);
 
+            const slot =
+                socket.data.slot;
 
-            io.to(code).emit(
-                "errorMsg",
-                "A player disconnected. The room is closed."
-            );
+            if (
+                typeof slot ===
+                "number" &&
+                room.players[slot]
+            ) {
 
+                const playerName =
+                    room.players[slot].name;
 
-            rooms.delete(code);
+                room.players[slot] =
+                    null;
+
+                io.to(code).emit(
+                    "playerDisconnected",
+                    {
+                        slot,
+                        name: playerName
+                    }
+                );
+
+                /*
+                 * If the host leaves, close
+                 * the room to keep the auction
+                 * synchronized.
+                 */
+
+                if (slot === 0) {
+
+                    io.to(code).emit(
+                        "errorMsg",
+                        "Host disconnected. Room closed."
+                    );
+
+                    rooms.delete(code);
+
+                    return;
+
+                }
+
+                emitState(room);
+
+            }
 
         }
     );
@@ -1128,7 +1761,8 @@ app.get(
     (_, res) => {
 
         res.json({
-            ok: true
+            ok: true,
+            players: PLAYERS.length
         });
 
     }
@@ -1145,6 +1779,14 @@ server.listen(
 
         console.log(
             `Football Auction running on port ${PORT}`
+        );
+
+        console.log(
+            `Player pool: ${PLAYERS.length}`
+        );
+
+        console.log(
+            `Maximum members: ${MAX_PLAYERS}`
         );
 
     }

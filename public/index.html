@@ -1,64 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Football Auction</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <link rel="stylesheet" href="style.css">
+    <title>
+        Ultimate Football Auction
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
 </head>
+
 
 <body>
 
     <div class="bg"></div>
 
+
     <main class="app">
 
-        <!-- HEADER -->
-        <header>
-            <div>
-                <p class="eyebrow">⚽ FOOTBALL AUCTION</p>
 
-                <h1>Ultimate Football Auction</h1>
+        <!-- ========================================= -->
+        <!-- HEADER -->
+        <!-- ========================================= -->
+
+        <header>
+
+            <div>
+
+                <p class="eyebrow">
+                    ⚽ FOOTBALL AUCTION
+                </p>
+
+                <h1>
+                    Ultimate Football Auction
+                </h1>
 
                 <p class="sub">
-                    Create a room, invite your friend, and build your dream squad.
+                    Create a room, invite your friends,
+                    and build your dream squad.
                 </p>
+
             </div>
 
-            <div class="room-pill" id="roomPill">
+
+            <div
+                class="room-pill"
+                id="roomPill"
+            >
                 OFFLINE
             </div>
+
         </header>
 
 
-        <!-- ================= LOBBY ================= -->
 
-        <section id="lobby" class="card lobby">
+        <!-- ========================================= -->
+        <!-- LOBBY -->
+        <!-- ========================================= -->
 
-            <h2>Start a Game</h2>
+        <section
+            id="lobby"
+            class="card lobby"
+        >
+
+            <h2>
+                Start a Game
+            </h2>
+
 
             <div class="grid2">
 
+
+                <!-- NAME -->
+
                 <div>
-                    <label>Your Name</label>
+
+                    <label>
+                        Your Name
+                    </label>
 
                     <input
                         id="name"
                         maxlength="20"
                         placeholder="Enter your name"
+                        autocomplete="off"
                     >
+
                 </div>
 
+
+                <!-- PURSE -->
+
                 <div>
-                    <label>Purse</label>
+
+                    <label>
+                        Starting Purse
+                    </label>
 
                     <select id="purse">
-                        <option value="100">100 Cr</option>
-                        <option value="200">200 Cr</option>
-                        <option value="300">300 Cr</option>
+
+                        <option value="100000000">
+                            100M
+                        </option>
+
+                        <option value="200000000">
+                            200M
+                        </option>
+
+                        <option value="300000000">
+                            300M
+                        </option>
+
                     </select>
+
                 </div>
 
             </div>
@@ -67,36 +132,57 @@
             <button
                 class="primary"
                 id="createBtn"
+                type="button"
             >
                 Create Room
             </button>
 
 
+
             <div class="divider">
-                <span>OR</span>
+
+                <span>
+                    OR
+                </span>
+
             </div>
 
 
+
+            <!-- JOIN -->
+
             <div class="grid2">
 
+
                 <div>
-                    <label>Friend's Room Code</label>
+
+                    <label>
+                        Friend's Room Code
+                    </label>
 
                     <input
                         id="roomCode"
                         maxlength="5"
                         placeholder="ABCDE"
+                        autocomplete="off"
                     >
+
                 </div>
 
+
                 <div>
-                    <label>Your Name</label>
+
+                    <label>
+                        Your Name
+                    </label>
 
                     <input
                         id="joinName"
                         maxlength="20"
                         placeholder="Enter your name"
+                        autocomplete="off"
                     >
+
                 </div>
 
             </div>
@@ -105,28 +191,37 @@
             <button
                 class="secondary"
                 id="joinBtn"
+                type="button"
             >
                 Join Room
             </button>
 
 
             <p class="hint">
-                Send the 5-character room code to your friend.
-                Both players can be anywhere online.
+
+                Share the 5-character room code
+                with your friends.
+
+                Up to 5 members can play.
+
             </p>
 
         </section>
 
 
 
-        <!-- ================= WAITING ROOM ================= -->
+        <!-- ========================================= -->
+        <!-- WAITING ROOM -->
+        <!-- ========================================= -->
 
         <section
             id="waiting"
             class="card hidden"
         >
 
+
             <div class="waiting-head">
+
 
                 <div>
 
@@ -147,6 +242,7 @@
                 <button
                     class="copy"
                     id="copyBtn"
+                    type="button"
                 >
                     Copy Code
                 </button>
@@ -154,29 +250,130 @@
             </div>
 
 
+
             <div id="waitingText">
-                Waiting for your friend...
+                Waiting for players...
             </div>
 
+
+
+            <!-- FIVE PLAYER SLOTS -->
 
             <div
                 class="players-wait"
                 id="playersWait"
-            ></div>
+            >
+
+
+                <div class="wait-player">
+
+                    <div class="eyebrow">
+                        PLAYER 1
+                    </div>
+
+                    <strong>
+                        Waiting...
+                    </strong>
+
+                    <div class="hint">
+                        Slot available
+                    </div>
+
+                </div>
+
+
+
+                <div class="wait-player">
+
+                    <div class="eyebrow">
+                        PLAYER 2
+                    </div>
+
+                    <strong>
+                        Waiting...
+                    </strong>
+
+                    <div class="hint">
+                        Slot available
+                    </div>
+
+                </div>
+
+
+
+                <div class="wait-player">
+
+                    <div class="eyebrow">
+                        PLAYER 3
+                    </div>
+
+                    <strong>
+                        Waiting...
+                    </strong>
+
+                    <div class="hint">
+                        Slot available
+                    </div>
+
+                </div>
+
+
+
+                <div class="wait-player">
+
+                    <div class="eyebrow">
+                        PLAYER 4
+                    </div>
+
+                    <strong>
+                        Waiting...
+                    </strong>
+
+                    <div class="hint">
+                        Slot available
+                    </div>
+
+                </div>
+
+
+
+                <div class="wait-player">
+
+                    <div class="eyebrow">
+                        PLAYER 5
+                    </div>
+
+                    <strong>
+                        Waiting...
+                    </strong>
+
+                    <div class="hint">
+                        Slot available
+                    </div>
+
+                </div>
+
+
+            </div>
+
 
 
             <button
                 class="primary hidden"
                 id="startBtn"
+                type="button"
             >
                 Start Auction
             </button>
+
 
         </section>
 
 
 
-        <!-- ================= AUCTION ================= -->
+        <!-- ========================================= -->
+        <!-- AUCTION -->
+        <!-- ========================================= -->
 
         <section
             id="auction"
@@ -187,6 +384,7 @@
             <!-- TOP BAR -->
 
             <div class="topbar">
+
 
                 <div
                     class="room-pill"
@@ -200,22 +398,26 @@
                     class="progress"
                     id="progress"
                 >
-                    Player 0 / 200
+                    Player 0 / 0
                 </div>
 
 
                 <button
                     class="danger small"
                     id="leaveBtn"
+                    type="button"
                 >
                     Leave
                 </button>
+
 
             </div>
 
 
 
-            <!-- TEAM PURSES -->
+            <!-- ========================================= -->
+            <!-- TEAMS -->
+            <!-- ========================================= -->
 
             <div
                 class="teams"
@@ -224,7 +426,9 @@
 
 
 
+            <!-- ========================================= -->
             <!-- AUCTION CARD -->
+            <!-- ========================================= -->
 
             <div class="auction-card card">
 
@@ -239,9 +443,11 @@
                 </div>
 
 
+
                 <p class="eyebrow">
                     CURRENT PLAYER
                 </p>
+
 
 
                 <h2 id="currentPlayer">
@@ -249,9 +455,20 @@
                 </h2>
 
 
+
+                <div
+                    class="hint"
+                    id="currentPosition"
+                >
+                    -
+                </div>
+
+
+
                 <!-- BID INFORMATION -->
 
                 <div class="bidline">
+
 
                     <div>
 
@@ -260,10 +477,11 @@
                         </span>
 
                         <strong id="currentBid">
-                            1 Cr
+                            100K
                         </strong>
 
                     </div>
+
 
 
                     <div>
@@ -278,94 +496,294 @@
 
                     </div>
 
+
                 </div>
 
 
 
-                <!-- AUCTION BUTTONS -->
+                <!-- ========================================= -->
+                <!-- BID AMOUNT OPTIONS -->
+                <!-- ========================================= -->
+
+                <div class="bid-section">
+
+
+                    <p class="eyebrow">
+                        SELECT BID
+                    </p>
+
+
+
+                    <div
+                        id="bidOptions"
+                        class="bid-options"
+                    >
+
+
+                        <button
+                            type="button"
+                            class="bid-option active"
+                            data-bid="100000"
+                        >
+                            100K
+                        </button>
+
+
+
+                        <button
+                            type="button"
+                            class="bid-option"
+                            data-bid="250000"
+                        >
+                            250K
+                        </button>
+
+
+
+                        <button
+                            type="button"
+                            class="bid-option"
+                            data-bid="500000"
+                        >
+                            500K
+                        </button>
+
+
+
+                        <button
+                            type="button"
+                            class="bid-option"
+                            data-bid="1000000"
+                        >
+                            1M
+                        </button>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- ========================================= -->
+                <!-- ACTION BUTTONS -->
+                <!-- ========================================= -->
 
                 <div class="actions">
+
 
                     <button
                         class="bid"
                         id="bidBtn"
+                        type="button"
                     >
-                        BID +1 Cr
+                        BID 100K
                     </button>
+
 
 
                     <button
                         class="sell"
                         id="sellBtn"
+                        type="button"
                     >
                         SOLD
                     </button>
 
 
+
                     <button
                         class="skip"
                         id="skipBtn"
+                        type="button"
                     >
                         SKIP
                     </button>
 
+
                 </div>
 
 
 
+                <!-- ========================================= -->
                 <!-- PAUSE -->
+                <!-- ========================================= -->
 
                 <div class="auction-controls">
+
 
                     <button
                         class="secondary small"
                         id="pauseBtn"
-                        disabled
+                        type="button"
                     >
                         ⏸ PAUSE
                     </button>
 
+
                 </div>
 
 
+
                 <p class="hint">
-                    Each player gets 10 seconds.
-                    Every successful bid resets the timer.
+
+                    Every successful bid resets
+                    the timer.
+
+                    Skip happens only when
+                    every member presses Skip.
+
                 </p>
+
 
             </div>
 
 
 
-            <!-- ================= SQUADS ================= -->
+            <!-- ========================================= -->
+            <!-- BIDDING HISTORY -->
+            <!-- ========================================= -->
 
-            <div class="card squad-card">
+            <div
+                class="card"
+                id="bidHistoryCard"
+            >
+
 
                 <div class="section-title">
 
                     <h3>
-                        Squads
+                        📜 Bidding History
                     </h3>
 
-                    <span id="squadCount">
-                        0 bought
+                </div>
+
+
+
+                <div
+                    id="bidHistory"
+                    class="bid-history"
+                >
+
+                    <p class="hint">
+                        No bids yet
+                    </p>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- ========================================= -->
+            <!-- CHAT -->
+            <!-- ========================================= -->
+
+            <div
+                class="card"
+                id="chatBox"
+            >
+
+
+                <div class="section-title">
+
+                    <h3>
+                        💬 Live Chat
+                    </h3>
+
+                    <span>
+                        Friends
                     </span>
 
                 </div>
 
 
-                <div id="squads"></div>
+
+                <div
+                    id="chatMessages"
+                    class="chat-messages"
+                >
+
+                    <p class="hint">
+                        Chat with your friends
+                        while playing.
+                    </p>
+
+                </div>
+
+
+
+                <div class="chat-input-row">
+
+
+                    <input
+                        id="chatInput"
+                        type="text"
+                        maxlength="300"
+                        placeholder="Type a message..."
+                        autocomplete="off"
+                    >
+
+
+
+                    <button
+                        id="chatSend"
+                        type="button"
+                        class="secondary"
+                    >
+                        Send
+                    </button>
+
+
+                </div>
+
 
             </div>
 
 
 
-            <!-- ================= FINAL RESULTS ================= -->
+            <!-- ========================================= -->
+            <!-- SQUADS -->
+            <!-- ========================================= -->
+
+            <div class="card squad-card">
+
+
+                <div class="section-title">
+
+
+                    <h3>
+                        Squads
+                    </h3>
+
+
+                    <span id="squadCount">
+                        0 bought
+                    </span>
+
+
+                </div>
+
+
+
+                <div id="squads"></div>
+
+
+            </div>
+
+
+
+            <!-- ========================================= -->
+            <!-- FINAL RESULTS -->
+            <!-- ========================================= -->
 
             <div
                 id="resultsCard"
                 class="card hidden"
             >
+
 
                 <div class="section-title">
 
@@ -376,43 +794,60 @@
                 </div>
 
 
+
                 <div id="winner"></div>
+
 
 
                 <div id="finalStats"></div>
 
 
+
                 <button
                     class="primary"
                     id="againBtn"
+                    type="button"
                 >
                     Play Again
                 </button>
 
+
             </div>
+
 
         </section>
 
 
 
-        <!-- TOAST MESSAGE -->
+        <!-- ========================================= -->
+        <!-- TOAST -->
+        <!-- ========================================= -->
 
         <div
             id="toast"
             class="toast"
         ></div>
 
+
     </main>
 
 
+
+    <!-- ========================================= -->
     <!-- SOCKET.IO -->
+    <!-- ========================================= -->
 
     <script src="/socket.io/socket.io.js"></script>
 
 
-    <!-- YOUR JAVASCRIPT -->
+
+    <!-- ========================================= -->
+    <!-- APP JS -->
+    <!-- ========================================= -->
 
     <script src="app.js"></script>
 
+
 </body>
+
 </html>
